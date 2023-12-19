@@ -44,7 +44,7 @@ namespace Golbaus_BE.Extentions
 				{
 					Id = adminId,
 					FullName = DefaultAdmin.FullName,
-					UserName = DefaultAdmin.Email,
+					UserName = DefaultAdmin.UserName,
 					NormalizedUserName = DefaultAdmin.Email.ToUpper(),
 					Email = DefaultAdmin.Email,
 					NormalizedEmail = DefaultAdmin.Email.ToUpper(),
@@ -57,7 +57,7 @@ namespace Golbaus_BE.Extentions
 				{
 					Id = superAdminId,
 					FullName = DefaultSuperAdmin.FullName,
-					UserName = DefaultSuperAdmin.Email,
+					UserName = DefaultSuperAdmin.UserName,
 					NormalizedUserName = DefaultSuperAdmin.Email.ToUpper(),
 					Email = DefaultSuperAdmin.Email,
 					NormalizedEmail = DefaultSuperAdmin.Email.ToUpper(),

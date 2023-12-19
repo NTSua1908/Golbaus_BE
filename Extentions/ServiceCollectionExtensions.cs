@@ -36,7 +36,9 @@ namespace Golbaus_BE.Extentions
 		public static IServiceCollection RegisterApiServices(this IServiceCollection services)
 		{
 			services.AddScoped<IAuthServices, AuthServices>();
+			services.AddScoped<IAccountService, AccountService>();
 			services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+			services.AddScoped<UserResolverService>();
 
 			services.AddIdentity<User, Role>(options =>
 			{

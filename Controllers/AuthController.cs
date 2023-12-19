@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Golbaus_BE.DTOs.Auths;
 using Golbaus_BE.Commons.Constants;
 using Role = Golbaus_BE.Commons.Constants.Role;
+using Golbaus_BE.Services.Implement;
+using Golbaus_BE.DTOs.Users;
 
 namespace Golbaus_BE.Controllers
 {
@@ -22,13 +24,15 @@ namespace Golbaus_BE.Controllers
 		private readonly SignInManager<User> _signInManager;
 		private readonly UserManager<User> _userManager;
 		private readonly IHttpContextAccessor _httpContextAccessor;
+		private readonly IAccountService _accountService;
 
-		public AuthController(IAuthServices authServices, SignInManager<User> signInManager, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
+		public AuthController(IAuthServices authServices, SignInManager<User> signInManager, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor, IAccountService accountService)
 		{
 			_authServices = authServices;
 			_signInManager = signInManager;
 			_userManager = userManager;
 			_httpContextAccessor = httpContextAccessor;
+			_accountService = accountService;
 		}
 
 		[HttpPost("Login")]

@@ -222,8 +222,8 @@ namespace Golbaus_BE.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "Avatar", "Bio", "ConcurrencyStamp", "DateJoined", "DoB", "Email", "EmailConfirmed", "FullName", "Gender", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "0f82194c-dc6a-45ff-8ad2-5a6ea82be10f", 0, null, null, "0df00d6b-0cdc-4eaf-948f-d3cdbbe92b44", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "superadmin@gmail.com", true, "Super admin", 0, false, null, "SUPERADMIN@GMAIL.COM", "SUPERADMIN@GMAIL.COM", "AQAAAAEAACcQAAAAEDZfhUgLq+mNYqETKdaDRnhgGyki1XBt38wTlrjxP66PQmW8REglrhn4h5OoRYuE5g==", null, false, "", false, "superadmin@gmail.com" },
-                    { "4bfcc5f7-5bdc-4827-a909-4f04ac5770ff", 0, null, null, "71229555-966a-4b46-ba94-06a26b8b0fd6", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "admin@gmail.com", true, "Admin", 0, false, null, "ADMIN@GMAIL.COM", "ADMIN@GMAIL.COM", "AQAAAAEAACcQAAAAELbsHunk/M1/qGjr7Z1hlC7VJrJyquGFlFLYz7LFICqiZ5a6MWxz5MUK41CIs4JLlw==", null, false, "", false, "admin@gmail.com" }
+                    { "0f82194c-dc6a-45ff-8ad2-5a6ea82be10f", 0, null, null, "0df00d6b-0cdc-4eaf-948f-d3cdbbe92b44", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "superadmin@gmail.com", true, "Super admin", 0, false, null, "SUPERADMIN@GMAIL.COM", "SUPERADMIN", "AQAAAAEAACcQAAAAEDZfhUgLq+mNYqETKdaDRnhgGyki1XBt38wTlrjxP66PQmW8REglrhn4h5OoRYuE5g==", null, false, "", false, "superadmin" },
+                    { "4bfcc5f7-5bdc-4827-a909-4f04ac5770ff", 0, null, null, "71229555-966a-4b46-ba94-06a26b8b0fd6", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "admin@gmail.com", true, "Admin", 0, false, null, "ADMIN@GMAIL.COM", "ADMIN", "AQAAAAEAACcQAAAAELbsHunk/M1/qGjr7Z1hlC7VJrJyquGFlFLYz7LFICqiZ5a6MWxz5MUK41CIs4JLlw==", null, false, "", false, "admin" }
                 });
 
             migrationBuilder.InsertData(

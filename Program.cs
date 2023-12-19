@@ -68,6 +68,8 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHangfireDashboard("/hangfire", options);
 
+app.UseCors("CorsPolicy");
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
