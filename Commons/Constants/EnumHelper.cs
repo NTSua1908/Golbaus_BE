@@ -13,4 +13,11 @@
 		Admin = 1,
 		User = 2
 	}
+
+	public enum PublishType
+	{
+		Public = 0,
+		Schedule = 1,
+		Private = 2
+	}
 }

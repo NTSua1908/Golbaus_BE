@@ -13,7 +13,7 @@ namespace Golbaus_BE.Services.Implement
 		private readonly ApiDbContext _dbContext;
 		private readonly UserResolverService _userResolverService;
 
-		public AccountService(UserManager<User> userManager, ApiDbContext dbContext, UserResolverService userResolverService, IConfiguration configuration)
+		public AccountService(UserManager<User> userManager, ApiDbContext dbContext, UserResolverService userResolverService)
 		{
 			_userManager = userManager;
 			_dbContext = dbContext;

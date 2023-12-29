@@ -37,6 +37,8 @@ namespace Golbaus_BE.Extentions
 		{
 			services.AddScoped<IAuthServices, AuthServices>();
 			services.AddScoped<IAccountService, AccountService>();
+			services.AddScoped<IPostService, PostService>();
+			services.AddScoped<ITagService, TagService>();
 			services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 			services.AddScoped<UserResolverService>();
 

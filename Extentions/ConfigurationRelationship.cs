@@ -26,6 +26,60 @@ namespace Golbaus_BE.Extentions
 			{
 				user.HasIndex(x => x.Email).IsUnique();
 			});
+
+			builder.Entity<Post>(post =>
+			{
+				post.HasOne(x => x.User)
+					.WithMany(user => user.Posts)
+					.HasForeignKey(x => x.UserId)
+					.IsRequired();
+			});
+
+			builder.Entity<Comment>(comment =>
+			{
+				comment.HasOne(x => x.User)
+						.WithMany(user => user.Comments)
+						.IsRequired();
+				comment.HasOne(x => x.Post)
+						.WithMany(post => post.Comments)
+						.IsRequired();
+				comment.HasOne(x => x.Parent)
+						.WithMany(x => x.Childs)
+						.HasForeignKey(x => x.ParentId)
+						.OnDelete(DeleteBehavior.Cascade);
+			});
+
+			builder.Entity<Tag>(tag =>
+			{
+				tag.HasIndex(x => x.Name)
+					.IsUnique();
+			});
+
+			builder.Entity<PostTagMap>(postTagMap =>
+			{
+				postTagMap.HasKey(x => new { x.PostId, x.TagId });
+				postTagMap.HasOne(x => x.Post)
+						.WithMany(post => post.PostTagMaps)
+						.HasForeignKey(x => x.PostId)
+						.IsRequired();
+				postTagMap.HasOne(x => x.Tag)
+						.WithMany(tag => tag.PostTagMaps)
+						.HasForeignKey(x => x.TagId)
+						.IsRequired();
+			});
+
+			builder.Entity<UserFollowMap>(followMap=>
+			{
+				followMap.HasKey(x => new { x.FollowerId, x.FollowingId});
+				followMap.HasOne(x => x.Follower)
+						.WithMany(user  => user.UserFollowerMaps)
+						.HasForeignKey(x => x.FollowerId)
+						.IsRequired();
+				followMap.HasOne(x => x.Following)
+						.WithMany(user  => user.UserFollowingMaps)
+						.HasForeignKey(x => x.FollowingId)
+						.IsRequired();
+			});
 		}
 	}
 }

@@ -61,6 +61,15 @@ namespace Golbaus_BE.Commons.ErrorLocalization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not have permission to perform this action.
+        /// </summary>
+        public static string DoNotHavePermission {
+            get {
+                return ResourceManager.GetString("DoNotHavePermission", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Email has not been confirmed.
         /// </summary>
         public static string EmailNotConfirm {
@@ -70,11 +79,38 @@ namespace Golbaus_BE.Commons.ErrorLocalization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The {0} must have at least {1} characters..
+        /// </summary>
+        public static string LengthRequired {
+            get {
+                return ResourceManager.GetString("LengthRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Username or password is incorrect.
         /// </summary>
         public static string LoginFail {
             get {
                 return ResourceManager.GetString("LoginFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is required.
+        /// </summary>
+        public static string MissingRequired {
+            get {
+                return ResourceManager.GetString("MissingRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} not found..
+        /// </summary>
+        public static string NotFound {
+            get {
+                return ResourceManager.GetString("NotFound", resourceCulture);
             }
         }
     }

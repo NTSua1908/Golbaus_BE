@@ -117,10 +117,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="DoNotHavePermission" xml:space="preserve">
+    <value>Do not have permission to perform this action</value>
+  </data>
   <data name="EmailNotConfirm" xml:space="preserve">
     <value>Email has not been confirmed</value>
   </data>
+  <data name="LengthRequired" xml:space="preserve">
+    <value>The {0} must have at least {1} characters.</value>
+  </data>
   <data name="LoginFail" xml:space="preserve">
     <value>Username or password is incorrect</value>
+  </data>
+  <data name="MissingRequired" xml:space="preserve">
+    <value>{0} is required</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>{0} not found.</value>
   </data>
 </root>
