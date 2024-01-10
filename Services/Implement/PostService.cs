@@ -5,6 +5,7 @@ using Golbaus_BE.DTOs;
 using Golbaus_BE.DTOs.Posts;
 using Golbaus_BE.Entities;
 using Golbaus_BE.Services.Interface;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Role = Golbaus_BE.Commons.Constants.Role;
 
@@ -14,11 +15,13 @@ namespace Golbaus_BE.Services.Implement
 	{
 		private readonly ApiDbContext _dbContext;
 		private readonly UserResolverService _userResolverService;
+		private readonly IHttpContextAccessor _httpContextAccessor;
 
-		public PostService(ApiDbContext dbContext, UserResolverService userResolverService)
+		public PostService(ApiDbContext dbContext, UserResolverService userResolverService, IHttpContextAccessor httpContextAccessor)
 		{
 			_dbContext = dbContext;
 			_userResolverService = userResolverService;
+			_httpContextAccessor = httpContextAccessor;
 		}
 
 		public Guid Create(PostCreateModel model, ErrorModel errors)
@@ -30,6 +33,11 @@ namespace Golbaus_BE.Services.Implement
 				Post post = model.ParseToEntity(userId, newTags, existedTags);
 
 				_dbContext.Posts.Add(post);
+				if (model.PublishType == PublishType.Schedule)
+				{
+					BackgroundJob.Schedule<IPostService>(x => x.PublishTask(post.Id), (post.PublishDate - DateTime.Now).Value);
+				}
+
 				user.PostCount++;
 				_dbContext.SaveChanges();
 				return post.Id;
@@ -54,6 +62,7 @@ namespace Golbaus_BE.Services.Implement
 			string userId = _userResolverService.GetUser();
 			Post post = _dbContext.Posts.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
 										.Include(x => x.User).ThenInclude(x => x.UserFollowerMaps)
+										.Include(x => x.PostUserVoteMaps)
 										.FirstOrDefault(x => x.Id == id && !x.IsDeleted && (x.UserId == userId || x.PublishType == PublishType.Public));
 			if (post == null)
 			{
@@ -61,6 +70,9 @@ namespace Golbaus_BE.Services.Implement
 			}
 			else
 			{
+				_httpContextAccessor.HttpContext.Session.SetString("Time", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+				_httpContextAccessor.HttpContext.Session.SetString("PostId", id.ToString());
+				Console.WriteLine(_httpContextAccessor.HttpContext.Session.Id);
 				return new PostDetailModel(post, userId);
 			}
 			return new PostDetailModel();
@@ -73,6 +85,7 @@ namespace Golbaus_BE.Services.Implement
 				post.IsDeleted = true;
 				post.UpdatedBy = user.Id;
 				post.UpdatedDate = DateTime.Now;
+				user.PostCount -= 1;
 				_dbContext.SaveChanges();
 			}
 		}
@@ -85,6 +98,7 @@ namespace Golbaus_BE.Services.Implement
 				post.Remark = remark;
 				post.UpdatedBy = user.Id;
 				post.UpdatedDate = DateTime.Now;
+				post.User.PostCount -= 1;
 				_dbContext.SaveChanges();
 			}
 		}
@@ -96,7 +110,99 @@ namespace Golbaus_BE.Services.Implement
 				post.IsDeleted = false;
 				post.UpdatedBy = user.Id;
 				post.UpdatedDate = DateTime.Now;
+				post.User.PostCount += 1;
 				_dbContext.SaveChanges();
+			}
+		}
+
+		public void ToggleUpVote(Guid id, ErrorModel errors)
+		{
+			string userId = _userResolverService.GetUser();
+			if (ValidateVotePost(id, userId, errors, out Post post))
+			{
+				var voted = _dbContext.PostUserVoteMaps.FirstOrDefault(x => x.PostId == post.Id && x.UserId == userId);
+				if (voted == null)
+				{
+					_dbContext.PostUserVoteMaps.Add(new PostUserVoteMap { PostId = post.Id, UserId = userId, Type = VoteType.UpVote });
+					post.UpVote += 1;
+				}
+				else if (voted.Type == VoteType.DownVote)
+				{
+					voted.Type = VoteType.UpVote;
+					post.UpVote += 1;
+					post.DownVote -= 1;
+				}
+				else if (voted.Type == VoteType.UpVote)
+				{
+					post.UpVote -= 1;
+					_dbContext.PostUserVoteMaps.Remove(voted);
+				}
+				_dbContext.SaveChanges();
+			}
+		}
+
+		public void ToggleDownVote(Guid id, ErrorModel errors)
+		{
+			string userId = _userResolverService.GetUser();
+			if (ValidateVotePost(id, userId, errors, out Post post))
+			{
+				var voted = _dbContext.PostUserVoteMaps.FirstOrDefault(x => x.PostId == post.Id && x.UserId == userId);
+				if (voted == null)
+				{
+					_dbContext.PostUserVoteMaps.Add(new PostUserVoteMap { PostId = post.Id, UserId = userId, Type = VoteType.DownVote });
+					post.DownVote += 1;
+				}
+				else if (voted.Type == VoteType.UpVote)
+				{
+					voted.Type = VoteType.DownVote;
+					post.UpVote -= 1;
+					post.DownVote += 1;
+				}
+				else if (voted.Type == VoteType.DownVote)
+				{
+					post.DownVote -= 1;
+					_dbContext.PostUserVoteMaps.Remove(voted);
+				}
+				_dbContext.SaveChanges();
+			}
+		}
+
+		public void PublishTask(Guid id)
+		{
+			Post post = _dbContext.Posts.FirstOrDefault(x => x.Id == id);
+			if (post != null)
+			{
+				post.PublishDate = DateTime.Now;
+				post.PublishType = PublishType.Public;
+				_dbContext.SaveChanges();
+			}
+		}
+
+		public void IncreaseView(Guid id, ErrorModel errors)
+		{
+			Post post = _dbContext.Posts.FirstOrDefault(x => x.Id == id);
+			if (post == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "Post"));
+			}
+			else
+			{
+				string timeGet = _httpContextAccessor.HttpContext.Session.GetString("Time");
+				string postId = _httpContextAccessor.HttpContext.Session.GetString("PostId");
+				Console.WriteLine(_httpContextAccessor.HttpContext.Session.Id);
+				if (timeGet != null && postId != null &&
+					Guid.TryParse(postId, out Guid PostId) && DateTime.TryParse(timeGet, out DateTime TimeGet) &&
+					id == PostId && (DateTime.Now - TimeGet).TotalSeconds > 10)
+				{
+					post.ViewCount++;
+					_dbContext.SaveChanges();
+					_httpContextAccessor.HttpContext.Session.Remove("Time");
+					_httpContextAccessor.HttpContext.Session.Remove("PostId");
+				}
+				else
+				{
+					errors.Add(string.Format(ErrorResource.Invalid, "Post"));
+				}
 			}
 		}
 
@@ -127,6 +233,10 @@ namespace Golbaus_BE.Services.Implement
 				{
 					errors.Add(string.Format(ErrorResource.LengthRequired, "post content", "50"));
 				}
+				if (model.PublishType == PublishType.Schedule && (model.WillBePublishedOn - DateTime.UtcNow).Value.TotalMinutes < 30)
+				{
+					errors.Add(ErrorResource.PublishTime);
+				}
 			}
 
 			return errors.IsEmpty;
@@ -141,7 +251,30 @@ namespace Golbaus_BE.Services.Implement
 			}
 			else
 			{
+				if (model.PublishType == PublishType.Schedule)
+				{
+					errors.Add(string.Format(ErrorResource.Invalid, "Publish type"));
+				}
 				ValidateCreatePost(userId, model, errors, out User user);
+			}
+			return errors.IsEmpty;
+		}
+
+		private bool ValidateVotePost(Guid postId, string userId, ErrorModel errors, out Post post)
+		{
+			post = _dbContext.Posts.FirstOrDefault(x => x.Id == postId && !x.IsDeleted);
+			if (post == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "Post"));
+			}
+			else
+			{
+				var user = _dbContext.Users.Include(x => x.UserRoleMaps).ThenInclude(x => x.Role)
+									   .FirstOrDefault(x => x.Id == userId);
+				if (user == null)
+				{
+					errors.Add(string.Format(ErrorResource.NotFound, "User"));
+				}
 			}
 			return errors.IsEmpty;
 		}
@@ -170,7 +303,7 @@ namespace Golbaus_BE.Services.Implement
 		private bool ValidateDeletePostByAdmin(Guid postId, string remark, ErrorModel errors, out Post post, out User user)
 		{
 			string userId = _userResolverService.GetUser();
-			post = _dbContext.Posts.FirstOrDefault(x => x.Id == postId && !x.IsDeleted);
+			post = _dbContext.Posts.Include(x => x.User).FirstOrDefault(x => x.Id == postId && !x.IsDeleted);
 			user = null;
 			if (post == null)
 			{
@@ -180,7 +313,7 @@ namespace Golbaus_BE.Services.Implement
 			{
 				errors.Add(string.Format(ErrorResource.MissingRequired, "Remark"));
 			}
-			else 
+			else
 			{
 				user = _dbContext.Users.Include(x => x.UserRoleMaps).ThenInclude(x => x.Role)
 									   .FirstOrDefault(x => x.Id == userId);
@@ -195,7 +328,7 @@ namespace Golbaus_BE.Services.Implement
 		private bool ValidateRestorePost(Guid postId, ErrorModel errors, out Post post, out User user)
 		{
 			string userId = _userResolverService.GetUser();
-			post = _dbContext.Posts.FirstOrDefault(x => x.Id == postId && x.IsDeleted);
+			post = _dbContext.Posts.Include(x => x.User).FirstOrDefault(x => x.Id == postId && x.IsDeleted);
 			user = null;
 			if (post == null)
 			{

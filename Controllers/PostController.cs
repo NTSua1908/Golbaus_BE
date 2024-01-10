@@ -47,6 +47,7 @@ namespace Golbaus_BE.Controllers
 		}
 
 		[HttpGet("GetDetail/{postId}")]
+		[AllowAnonymous]
 		public IActionResult GetDetail(Guid postId)
 		{
 			ErrorModel errors = new ErrorModel();
@@ -97,6 +98,41 @@ namespace Golbaus_BE.Controllers
 				return BadRequest(errors);
 			}
 			_postService.DeleteByAdmin(postId, remark, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
+
+		[HttpPut("ToggleUpVote/{postId}")]
+		public IActionResult ToggleUpVote(Guid postId)
+		{
+			ErrorModel errors = new ErrorModel();
+			if (!ModelState.IsValid)
+			{
+				AddErrorsFromModelState(ref errors);
+				return BadRequest(errors);
+			}
+			_postService.ToggleUpVote(postId, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
+
+		[HttpPut("ToggleDownVote/{postId}")]
+		public IActionResult ToggleDownVote(Guid postId)
+		{
+			ErrorModel errors = new ErrorModel();
+			if (!ModelState.IsValid)
+			{
+				AddErrorsFromModelState(ref errors);
+				return BadRequest(errors);
+			}
+			_postService.ToggleDownVote(postId, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
+
+		[HttpPut("IncreaseView/{postId}")]
+		[AllowAnonymous]
+		public IActionResult IncreaseView(Guid postId)
+		{
+			ErrorModel errors = new ErrorModel();
+			_postService.IncreaseView(postId, errors);
 			return errors.IsEmpty ? Ok() : BadRequest(errors);
 		}
 	}

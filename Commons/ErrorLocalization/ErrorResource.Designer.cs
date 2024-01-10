@@ -79,6 +79,15 @@ namespace Golbaus_BE.Commons.ErrorLocalization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} invalid..
+        /// </summary>
+        public static string Invalid {
+            get {
+                return ResourceManager.GetString("Invalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The {0} must have at least {1} characters..
         /// </summary>
         public static string LengthRequired {
@@ -111,6 +120,15 @@ namespace Golbaus_BE.Commons.ErrorLocalization {
         public static string NotFound {
             get {
                 return ResourceManager.GetString("NotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The publication time must be at least 30 minutes after the current time.
+        /// </summary>
+        public static string PublishTime {
+            get {
+                return ResourceManager.GetString("PublishTime", resourceCulture);
             }
         }
     }

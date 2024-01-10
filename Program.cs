@@ -14,6 +14,15 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCustomDbContext(builder);
 builder.Services.AddHangfire(builder);
 builder.Services.RegisterApiServices();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+	options.IdleTimeout = TimeSpan.FromMinutes(1); 
+	options.Cookie.HttpOnly = true;
+	options.Cookie.IsEssential = true;
+	options.Cookie.SameSite = SameSiteMode.None;
+	options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
 
 builder.Services.AddCors(options =>
 {
@@ -21,6 +30,7 @@ builder.Services.AddCors(options =>
 					policy => policy.AllowAnyHeader()
 									.AllowAnyMethod()
 									.SetIsOriginAllowed(origin => true)
+									//.WithOrigins("http://localhost:3000")
 									.AllowCredentials());
 });
 
@@ -60,13 +70,15 @@ if (app.Environment.IsDevelopment())
 //};
 
 //app.UseEndpoints(endpoints =>
-//    endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
-//    {
-//        IgnoreAntiforgeryToken = true
-//    })
+//	endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
+//	{
+//		IgnoreAntiforgeryToken = true
+//	})
 //);
 
-//app.UseHangfireDashboard("/hangfire", options);
+app.UseSession();
+
+app.UseHangfireDashboard("/hangfire");
 
 app.UseCors("CorsPolicy");
 

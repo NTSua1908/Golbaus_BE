@@ -18,5 +18,7 @@ namespace Golbaus_BE.Entities
 		public virtual ICollection<Comment> Comments { get; set; }
 		public virtual ICollection<UserFollowMap> UserFollowerMaps{ get; set; }
 		public virtual ICollection<UserFollowMap> UserFollowingMaps{ get; set; }
+		public virtual ICollection<PostUserVoteMap> PostUserVoteMaps { get; set; }
+		public virtual ICollection<CommentUserVoteMap> CommentUserVoteMaps { get; set; }
 	}
 }

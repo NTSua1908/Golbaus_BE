@@ -20,4 +20,11 @@
 		Schedule = 1,
 		Private = 2
 	}
+
+	public enum VoteType
+	{
+		UpVote = 0,
+		DownVote = 1,
+		Unvote = 2,
+	}
 }

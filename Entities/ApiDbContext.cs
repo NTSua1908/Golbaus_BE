@@ -33,5 +33,7 @@ namespace Golbaus_BE.Entities
 		public DbSet<Tag> Tags { get; set; }
 		public DbSet<PostTagMap> PostTagMaps { get; set; }
 		public DbSet<UserFollowMap> UserFollowMaps { get; set; }
+		public DbSet<PostUserVoteMap> PostUserVoteMaps { get; set; }
+		public DbSet<CommentUserVoteMap> CommentUserVoteMaps { get; set; }
 	}
 }

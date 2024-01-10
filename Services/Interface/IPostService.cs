@@ -1,4 +1,5 @@
-﻿using Golbaus_BE.DTOs;
+﻿using Golbaus_BE.Commons.Constants;
+using Golbaus_BE.DTOs;
 using Golbaus_BE.DTOs.Posts;
 
 namespace Golbaus_BE.Services.Interface
@@ -11,5 +12,9 @@ namespace Golbaus_BE.Services.Interface
 		void Delete(Guid id, ErrorModel errors);
 		void DeleteByAdmin(Guid id, string remark, ErrorModel errors);
 		void Restore(Guid id, ErrorModel errors);
+		void ToggleUpVote(Guid id, ErrorModel errors);
+		void ToggleDownVote(Guid id, ErrorModel errors);
+		void PublishTask(Guid id);
+		void IncreaseView(Guid id, ErrorModel errors);
 	}
 }

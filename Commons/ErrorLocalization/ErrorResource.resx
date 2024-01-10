@@ -123,6 +123,9 @@
   <data name="EmailNotConfirm" xml:space="preserve">
     <value>Email has not been confirmed</value>
   </data>
+  <data name="Invalid" xml:space="preserve">
+    <value>{0} invalid.</value>
+  </data>
   <data name="LengthRequired" xml:space="preserve">
     <value>The {0} must have at least {1} characters.</value>
   </data>
@@ -134,5 +137,8 @@
   </data>
   <data name="NotFound" xml:space="preserve">
     <value>{0} not found.</value>
+  </data>
+  <data name="PublishTime" xml:space="preserve">
+    <value>The publication time must be at least 30 minutes after the current time</value>
   </data>
 </root>

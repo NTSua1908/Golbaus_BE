@@ -80,6 +80,32 @@ namespace Golbaus_BE.Extentions
 						.HasForeignKey(x => x.FollowingId)
 						.IsRequired();
 			});
+
+			builder.Entity<PostUserVoteMap>(voteMap =>
+			{
+				voteMap.HasKey(x => new { x.UserId, x.PostId});
+				voteMap.HasOne(x => x.User)
+						.WithMany(user => user.PostUserVoteMaps)
+						.HasForeignKey(x => x.UserId)
+						.IsRequired();
+				voteMap.HasOne(x => x.Post)
+						.WithMany(post => post.PostUserVoteMaps)
+						.HasForeignKey(x => x.PostId)
+						.IsRequired();
+			});
+
+			builder.Entity<CommentUserVoteMap>(voteMap =>
+			{
+				voteMap.HasKey(x => new { x.UserId, x.CommentId });
+				voteMap.HasOne(x => x.User)
+						.WithMany(user => user.CommentUserVoteMaps)
+						.HasForeignKey(x => x.UserId)
+						.IsRequired();
+				voteMap.HasOne(x => x.Comment)
+						.WithMany(comment => comment.CommentUserVoteMaps)
+						.HasForeignKey(x => x.CommentId)
+						.IsRequired();
+			});
 		}
 	}
 }

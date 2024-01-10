@@ -22,5 +22,6 @@ namespace Golbaus_BE.Entities
         public Guid PostId { get; set; }
         public virtual Post Post { get; set; }
 		public virtual ICollection<Comment> Childs { get; set; }
-    }
+		public virtual ICollection<CommentUserVoteMap> CommentUserVoteMaps { get; set; }
+	}
 }

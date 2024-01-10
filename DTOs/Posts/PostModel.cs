@@ -18,6 +18,7 @@ namespace Golbaus_BE.DTOs.Posts
 		public List<string> Tags { get; set; }
 		[EnumDataType(typeof(PublishType))]
 		public PublishType PublishType { get; set; }
+		public DateTime? WillBePublishedOn { get; set; }
 
 		public Post ParseToEntity(string userId, List<string> newTags, List<Tag> existedTags)
 		{
@@ -31,7 +32,7 @@ namespace Golbaus_BE.DTOs.Posts
 				Content = Content,
 				PublishType = PublishType,
 				CreatedDate = DateTime.Now,
-				PublishDate = PublishType == PublishType.Public ? DateTime.Now : null,
+				PublishDate = PublishType == PublishType.Public ? DateTime.Now : WillBePublishedOn.Value.ToLocalTime(),
 				PostTagMaps = postTags,
 				Remark = "",
 				UserId = userId
@@ -81,20 +82,22 @@ namespace Golbaus_BE.DTOs.Posts
 		public string Excerpt { get; set; }
 		public string Thumbnail { get; set; }
 		public string Content { get; set; }
-		public int UpVote { get; set; }
-		public int DownVote { get; set; }
+		public int CountVote { get; set; }
 		public DateTime? PublishDate { get; set; }
 		public DateTime? UpdatedDate { get; set; }
 		public string FullName { get; set; }
 		public string UserName { get; set; }
-		public string? Avatar { get; set; }
+		public string Avatar { get; set; }
 		public bool IsFollowed { get; set; }
 		public bool IsMyPost { get; set; }
 		public int PostCount { get; set; }
 		public int FollowCount { get; set; }
 		public int CommentCount { get; set; }
 		public int ViewCount { get; set; }
-		public List<string> Tags { get; set; }
+        public VoteType? Vote { get; set; }
+        public PublishType PublishType { get; set; }
+		public DateTime? WillBePublishedOn { get; set; }
+        public List<string> Tags { get; set; }
 
 		public PostDetailModel() { }
 
@@ -105,8 +108,7 @@ namespace Golbaus_BE.DTOs.Posts
 			Excerpt = post.Excerpt;
 			Thumbnail = post.Thumbnail;
 			Content = post.Content;
-			UpVote = post.UpVote;
-			DownVote = post.DownVote;
+			CountVote = post.UpVote - post.DownVote;
 			PublishDate = post.PublishDate;
 			UpdatedDate = post.UpdatedDate;
 			FullName = post.User.FullName;
@@ -117,6 +119,10 @@ namespace Golbaus_BE.DTOs.Posts
 			PostCount = post.User.PostCount;
 			FollowCount = post.User.UserFollowerMaps.Count();
 			ViewCount = post.ViewCount;
+			var vote = post.PostUserVoteMaps.FirstOrDefault(x => x.PostId == post.Id && x.UserId == viewerId);
+			Vote = vote == null ? VoteType.Unvote : vote.Type;
+			PublishType = post.PublishType;
+			WillBePublishedOn = post.PublishType == PublishType.Schedule ? post.PublishDate : null;
 			Tags = post.PostTagMaps.Select(x => x.Tag.Name).ToList();
 		}
 	}
