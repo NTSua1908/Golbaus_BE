@@ -6,15 +6,18 @@ namespace Golbaus_BE.DTOs.Users
 {
 	public class UserGetByTokenModel
 	{
-		public string FullName { get; set; }
+        public string Id { get; set; }
+        public string FullName { get; set; }
 		public string? Avatar { get; set; }
         public string UserName { get; set; }
         public Role Role { get; set; }
 
-		public UserGetByTokenModel(User user) {
+		public UserGetByTokenModel(User user) 
+		{
+			Id = user.Id;
+			FullName = user.FullName;
 			UserName = user.UserName;
 			Avatar = user.Avatar;
-			FullName = user.FullName;
 			Role = Enum.Parse<Role>(user.UserRoleMaps.First().Role.Name);
 		}
     }

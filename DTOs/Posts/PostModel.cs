@@ -118,6 +118,7 @@ namespace Golbaus_BE.DTOs.Posts
 			IsMyPost = viewerId == post.UserId;
 			PostCount = post.User.PostCount;
 			FollowCount = post.User.UserFollowerMaps.Count();
+			CommentCount = post.CommentPosts.Count(x => !x.IsDeleted);
 			ViewCount = post.ViewCount;
 			var vote = post.PostUserVoteMaps.FirstOrDefault(x => x.PostId == post.Id && x.UserId == viewerId);
 			Vote = vote == null ? VoteType.Unvote : vote.Type;

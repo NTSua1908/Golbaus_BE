@@ -1,9 +1,10 @@
 ﻿using Golbaus_BE.Commons.Constants;
+using Golbaus_BE.Entities.BaseEntity;
 using Microsoft.AspNetCore.Identity;
 
 namespace Golbaus_BE.Entities
 {
-	public class User : IdentityUser
+    public class User : IdentityUser
 	{
 
 		public string FullName { get; set; }
@@ -15,10 +16,10 @@ namespace Golbaus_BE.Entities
         public int PostCount { get; set; }
         public virtual ICollection<UserRoleMap> UserRoleMaps { get; set; }
 		public virtual ICollection<Post> Posts { get; set; }
-		public virtual ICollection<Comment> Comments { get; set; }
+		public virtual ICollection<CommentPost> CommentPosts { get; set; }
+		public virtual ICollection<CommentPostUserVoteMap> CommentPostUserVoteMaps { get; set; }
+		public virtual ICollection<PostUserVoteMap> PostUserVoteMaps { get; set; }
 		public virtual ICollection<UserFollowMap> UserFollowerMaps{ get; set; }
 		public virtual ICollection<UserFollowMap> UserFollowingMaps{ get; set; }
-		public virtual ICollection<PostUserVoteMap> PostUserVoteMaps { get; set; }
-		public virtual ICollection<CommentUserVoteMap> CommentUserVoteMaps { get; set; }
 	}
 }

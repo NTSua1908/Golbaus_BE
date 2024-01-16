@@ -1,9 +1,10 @@
 ﻿using Golbaus_BE.Entities;
+using Golbaus_BE.Entities.BaseEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Golbaus_BE.Extentions
 {
-	public static class ConfigurationRelationship
+    public static class ConfigurationRelationship
 	{
 		public static void ConfigDefaultDB(this ModelBuilder builder)
 		{
@@ -35,13 +36,13 @@ namespace Golbaus_BE.Extentions
 					.IsRequired();
 			});
 
-			builder.Entity<Comment>(comment =>
+			builder.Entity<CommentPost>(comment =>
 			{
 				comment.HasOne(x => x.User)
-						.WithMany(user => user.Comments)
+						.WithMany(user => user.CommentPosts)
 						.IsRequired();
 				comment.HasOne(x => x.Post)
-						.WithMany(post => post.Comments)
+						.WithMany(post => post.CommentPosts)
 						.IsRequired();
 				comment.HasOne(x => x.Parent)
 						.WithMany(x => x.Childs)
@@ -94,15 +95,15 @@ namespace Golbaus_BE.Extentions
 						.IsRequired();
 			});
 
-			builder.Entity<CommentUserVoteMap>(voteMap =>
+			builder.Entity<CommentPostUserVoteMap>(voteMap =>
 			{
 				voteMap.HasKey(x => new { x.UserId, x.CommentId });
 				voteMap.HasOne(x => x.User)
-						.WithMany(user => user.CommentUserVoteMaps)
+						.WithMany(user => user.CommentPostUserVoteMaps)
 						.HasForeignKey(x => x.UserId)
 						.IsRequired();
 				voteMap.HasOne(x => x.Comment)
-						.WithMany(comment => comment.CommentUserVoteMaps)
+						.WithMany(comment => comment.CommentPostUserVoteMaps)
 						.HasForeignKey(x => x.CommentId)
 						.IsRequired();
 			});

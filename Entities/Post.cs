@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Golbaus_BE.Commons.Constants;
+using Golbaus_BE.Entities.BaseEntity;
 
 namespace Golbaus_BE.Entities
 {
-	public class Post
+    public class Post
 	{
 		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public Guid Id { get; set; }
@@ -24,7 +25,7 @@ namespace Golbaus_BE.Entities
 		public string UpdatedBy{ get; set; }
 		public string UserId { get; set; }
 		public virtual User User{ get; set; }
-		public virtual ICollection<Comment>? Comments { get; set; }
+		public virtual ICollection<CommentPost> CommentPosts { get; set; }
 		public virtual ICollection<PostTagMap> PostTagMaps{ get; set; }
 		public virtual ICollection<PostUserVoteMap> PostUserVoteMaps { get; set; }
 	}

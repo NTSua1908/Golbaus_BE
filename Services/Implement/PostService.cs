@@ -63,6 +63,7 @@ namespace Golbaus_BE.Services.Implement
 			Post post = _dbContext.Posts.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
 										.Include(x => x.User).ThenInclude(x => x.UserFollowerMaps)
 										.Include(x => x.PostUserVoteMaps)
+										.Include(x => x.CommentPosts)
 										.FirstOrDefault(x => x.Id == id && !x.IsDeleted && (x.UserId == userId || x.PublishType == PublishType.Public));
 			if (post == null)
 			{
