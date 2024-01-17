@@ -12,6 +12,7 @@ using Golbaus_BE.Commons.Constants;
 using Role = Golbaus_BE.Commons.Constants.Role;
 using Golbaus_BE.Services.Implement;
 using Golbaus_BE.DTOs.Users;
+using Hangfire;
 
 namespace Golbaus_BE.Controllers
 {
@@ -25,47 +26,56 @@ namespace Golbaus_BE.Controllers
 		private readonly UserManager<User> _userManager;
 		private readonly IHttpContextAccessor _httpContextAccessor;
 		private readonly IAccountService _accountService;
+		private readonly IEmailService _emailService;
 
-		public AuthController(IAuthServices authServices, SignInManager<User> signInManager, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor, IAccountService accountService)
+		public AuthController(IAuthServices authServices, SignInManager<User> signInManager, UserManager<User> userManager, 
+			IHttpContextAccessor httpContextAccessor, IAccountService accountService, IEmailService emailService)
 		{
 			_authServices = authServices;
 			_signInManager = signInManager;
 			_userManager = userManager;
 			_httpContextAccessor = httpContextAccessor;
 			_accountService = accountService;
+			_emailService = emailService;
 		}
 
 		[HttpPost("Login")]
 		public async Task<IActionResult> Login([FromBody] LoginModel model)
 		{
 			ErrorModel errors = new ErrorModel();
+			model.Email = model.Email.Trim();
+			model.Password = model.Password.Trim();
 
 			try
 			{
-				var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
-				var account = await _userManager.FindByNameAsync(model.Email);
-				if (result.Succeeded)
+				var account = await _userManager.FindByEmailAsync(model.Email);
+				if (account != null)
 				{
-					var roleAccount = await _userManager.GetRolesAsync(account);
-					string roleName = roleAccount.Count() == 0 ? "User" : roleAccount.First();
-					int value = (int)Enum.Parse(typeof(Role), roleName);
-					return Ok(new
+					var result = await _signInManager.PasswordSignInAsync(account.UserName, model.Password, false, false);
+					if (result.Succeeded)
 					{
-						token = JWTHelper.GenerateJwtToken(account.UserName, account.Id, value),
-					});
-				}
-				else
-				{
-					if (result.IsNotAllowed)
-					{
-						errors.Add(ErrorResource.EmailNotConfirm);
+						var roleAccount = await _userManager.GetRolesAsync(account);
+						string roleName = roleAccount.Count() == 0 ? "User" : roleAccount.First();
+						int value = (int)Enum.Parse(typeof(Role), roleName);
+						return Ok(new
+						{
+							token = JWTHelper.GenerateJwtToken(account.UserName, account.Id, value),
+						});
 					}
 					else
 					{
-						errors.Add(ErrorResource.LoginFail);
+						if (result.IsNotAllowed)
+						{
+							errors.Add(ErrorResource.EmailNotConfirm);
+						}
+						else
+						{
+							errors.Add(ErrorResource.LoginFail);
+						}
+						return BadRequest(errors);
 					}
-					return BadRequest(errors);
 				}
+				return BadRequest(errors);
 			}
 			catch (Exception e)
 			{
@@ -85,6 +95,52 @@ namespace Golbaus_BE.Controllers
 			}
 
 			return NoContent();
+		}
+
+		[HttpGet]
+		[Route("ConfirmEmail/{email}/{token}")]
+		public async Task<IActionResult> ConfirmEmail(string token, string email)
+		{
+			ErrorModel errors = new ErrorModel();
+			var user = await _userManager.FindByEmailAsync(email);
+			if (user == null)
+			{
+				errors.Add(String.Format(ErrorResource.NotFound, "User"));
+				return BadRequest(errors);
+			}
+
+			var result = await _userManager.ConfirmEmailAsync(user, token.Replace("@", "/"));
+			if (result.Succeeded)
+			{
+				return Ok(ErrorResource.EmailVerificationSuccessful);
+			}
+			else
+			{
+				errors.Errors.Add(ErrorResource.TokenExpried);
+				return BadRequest(errors);
+			}
+		}
+
+		[HttpGet]
+		[Route("ResendConfirmEmail/{email}")]
+		public async Task<IActionResult> ResendConfirmEmail(string email)
+		{
+			ErrorModel errors = new ErrorModel();
+			var user = await _userManager.FindByEmailAsync(email);
+			if (user == null || user.EmailConfirmed)
+			{
+				errors.Add(String.Format(ErrorResource.NotFound, "User"));
+				return BadRequest(errors);
+			}
+
+			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+			BackgroundJob.Enqueue(() => _emailService.SendMailConfirmAsync(new EmailContent()
+			{
+				Subject = "Xác nhận email",
+				To = user.Email
+			}, _httpContextAccessor.HttpContext.Request.Host.Value, user.FullName, token, user.Email));
+
+			return Ok();
 		}
 	}
 }

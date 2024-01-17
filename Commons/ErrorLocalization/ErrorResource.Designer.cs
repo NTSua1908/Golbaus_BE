@@ -61,6 +61,15 @@ namespace Golbaus_BE.Commons.ErrorLocalization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} already exists.
+        /// </summary>
+        public static string AlreadyExists {
+            get {
+                return ResourceManager.GetString("AlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do not have permission to perform this action.
         /// </summary>
         public static string DoNotHavePermission {
@@ -75,6 +84,15 @@ namespace Golbaus_BE.Commons.ErrorLocalization {
         public static string EmailNotConfirm {
             get {
                 return ResourceManager.GetString("EmailNotConfirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Email verification successful.
+        /// </summary>
+        public static string EmailVerificationSuccessful {
+            get {
+                return ResourceManager.GetString("EmailVerificationSuccessful", resourceCulture);
             }
         }
         
@@ -124,11 +142,29 @@ namespace Golbaus_BE.Commons.ErrorLocalization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The password and confirm password do not match.
+        /// </summary>
+        public static string PasswordNotMatch {
+            get {
+                return ResourceManager.GetString("PasswordNotMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The publication time must be at least 30 minutes after the current time.
         /// </summary>
         public static string PublishTime {
             get {
                 return ResourceManager.GetString("PublishTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Activation link has expired.
+        /// </summary>
+        public static string TokenExpried {
+            get {
+                return ResourceManager.GetString("TokenExpried", resourceCulture);
             }
         }
     }

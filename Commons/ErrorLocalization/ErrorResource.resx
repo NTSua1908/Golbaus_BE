@@ -117,11 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AlreadyExists" xml:space="preserve">
+    <value>{0} already exists</value>
+  </data>
   <data name="DoNotHavePermission" xml:space="preserve">
     <value>Do not have permission to perform this action</value>
   </data>
   <data name="EmailNotConfirm" xml:space="preserve">
     <value>Email has not been confirmed</value>
+  </data>
+  <data name="EmailVerificationSuccessful" xml:space="preserve">
+    <value>Email verification successful</value>
   </data>
   <data name="Invalid" xml:space="preserve">
     <value>{0} invalid.</value>
@@ -138,7 +144,13 @@
   <data name="NotFound" xml:space="preserve">
     <value>{0} not found.</value>
   </data>
+  <data name="PasswordNotMatch" xml:space="preserve">
+    <value>The password and confirm password do not match</value>
+  </data>
   <data name="PublishTime" xml:space="preserve">
     <value>The publication time must be at least 30 minutes after the current time</value>
+  </data>
+  <data name="TokenExpried" xml:space="preserve">
+    <value>Activation link has expired</value>
   </data>
 </root>

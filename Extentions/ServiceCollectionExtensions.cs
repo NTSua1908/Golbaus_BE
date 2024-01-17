@@ -41,6 +41,7 @@ namespace Golbaus_BE.Extentions
 			services.AddScoped<ICommentService, CommentService>();
 			services.AddScoped<IPostService, PostService>();
 			services.AddScoped<ITagService, TagService>();
+			services.AddScoped<IEmailService, EmailService>();
 			services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 			services.AddScoped<UserResolverService>();
 
@@ -104,6 +105,8 @@ namespace Golbaus_BE.Extentions
 
 			services.Configure<PasswordResetTokenProviderOptions>(opt => opt.TokenLifespan = TimeSpan.FromMinutes(5));
 
+			services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.FromDays(1));
+
 			return services;
 		}
 
@@ -118,7 +121,7 @@ namespace Golbaus_BE.Extentions
 					builder.Configuration.GetConnectionString("ApiDbConnection"),
 					new MySqlStorageOptions
 					{
-						QueuePollInterval = TimeSpan.FromSeconds(30),
+						QueuePollInterval = TimeSpan.FromSeconds(1),
 						JobExpirationCheckInterval = TimeSpan.FromHours(1),
 						CountersAggregateInterval = TimeSpan.FromMinutes(5),
 						PrepareSchemaIfNecessary = true,

@@ -20,14 +20,33 @@ namespace Golbaus_BE.Controllers
 		private readonly UserManager<User> _userManager;
 		private readonly UserResolverService _userResolverService;
 		private readonly SignInManager<User> _signInManager;
+		private readonly IHttpContextAccessor _httpContextAccessor;
 
 		public AccountController(IAccountService accountService, UserResolverService userResolverService,
-			UserManager<User> userManager, SignInManager<User> signInManager)
+			UserManager<User> userManager, SignInManager<User> signInManager, IHttpContextAccessor httpContextAccessor)
 		{
 			_accountService = accountService;
 			_userResolverService = userResolverService;
 			_userManager = userManager;
 			_signInManager = signInManager;
+			_httpContextAccessor = httpContextAccessor;
+		}
+
+		[HttpPost("CreateUser")]
+		[AllowAnonymous]
+		public async Task<IActionResult> CreateUser([FromBody] CreateUserModel model)
+		{
+			ErrorModel errors = new ErrorModel();
+			if (!ModelState.IsValid)
+			{
+				AddErrorsFromModelState(ref errors);
+				return BadRequest(errors);
+			}
+
+			errors = await _accountService.CreateUser(model, _httpContextAccessor.HttpContext.Request.Host.Value);
+			if (!errors.IsEmpty)
+				return BadRequest(errors);
+			return Ok();
 		}
 
 		[HttpGet("GetByToken")]
