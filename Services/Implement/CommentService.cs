@@ -1,9 +1,9 @@
-﻿using Golbaus_BE.Commons.ErrorLocalization;
+﻿using Golbaus_BE.Commons.Constants;
+using Golbaus_BE.Commons.ErrorLocalization;
 using Golbaus_BE.Commons.Helper;
 using Golbaus_BE.DTOs;
 using Golbaus_BE.DTOs.Comments;
 using Golbaus_BE.Entities;
-using Golbaus_BE.Entities.BaseEntity;
 using Golbaus_BE.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -68,6 +68,58 @@ namespace Golbaus_BE.Services.Implement
 			}
 		}
 
+		public void ToggleUpVotePostComment(Guid id, ErrorModel errors)
+		{
+			string userId = _userResolverService.GetUser();
+			if (ValidateVoteComment(id, userId, errors, out CommentPost comment))
+			{
+				var voted = _dbContext.CommentPostUserVoteMaps.FirstOrDefault(x => x.CommentId == comment.Id && x.UserId == userId);
+				if (voted == null)
+				{
+					_dbContext.CommentPostUserVoteMaps.Add(new CommentPostUserVoteMap { CommentId = comment.Id, UserId = userId, Type = VoteType.UpVote });
+					comment.UpVote += 1;
+				}
+				else if (voted.Type == VoteType.DownVote)
+				{
+					voted.Type = VoteType.UpVote;
+					comment.UpVote += 1;
+					comment.DownVote -= 1;
+				}
+				else if (voted.Type == VoteType.UpVote)
+				{
+					comment.UpVote -= 1;
+					_dbContext.CommentPostUserVoteMaps.Remove(voted);
+				}
+				_dbContext.SaveChanges();
+			}
+		}
+
+		public void ToggleDownVotePostComment(Guid id, ErrorModel errors)
+		{
+			string userId = _userResolverService.GetUser();
+			if (ValidateVoteComment(id, userId, errors, out CommentPost comment))
+			{
+				var voted = _dbContext.CommentPostUserVoteMaps.FirstOrDefault(x => x.CommentId == comment.Id && x.UserId == userId);
+				if (voted == null)
+				{
+					_dbContext.CommentPostUserVoteMaps.Add(new CommentPostUserVoteMap { CommentId = comment.Id, UserId = userId, Type = VoteType.DownVote });
+					comment.DownVote += 1;
+				}
+				else if (voted.Type == VoteType.UpVote)
+				{
+					voted.Type = VoteType.DownVote;
+					comment.UpVote -= 1;
+					comment.DownVote += 1;
+				}
+				else if (voted.Type == VoteType.DownVote)
+				{
+					comment.DownVote -= 1;
+					_dbContext.CommentPostUserVoteMaps.Remove(voted);
+				}
+				_dbContext.SaveChanges();
+			}
+		}
+
 		#region Helper
 		private bool ValidateCreateCommentPost(CommentCreateModel model, ErrorModel errors, out Post post, out CommentPost comment, out User user)
 		{
@@ -119,6 +171,26 @@ namespace Golbaus_BE.Services.Implement
 			if (ValidateUser(errors, out User user))
 			{
 				comment = _dbContext.CommentPosts.FirstOrDefault(x => x.Id == id && x.UserId == user.Id && !x.IsDeleted);
+				if (comment == null)
+				{
+					errors.Add(string.Format(ErrorResource.NotFound, "Comment"));
+				}
+			}
+
+			return errors.IsEmpty;
+		}
+
+		private bool ValidateVoteComment(Guid id, string userId, ErrorModel errors, out CommentPost comment)
+		{
+			comment = null;
+			var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+			if (user == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "User"));
+			}
+			else 
+			{
+				comment = _dbContext.CommentPosts.FirstOrDefault(x => x.Id == id && !x.IsDeleted);
 				if (comment == null)
 				{
 					errors.Add(string.Format(ErrorResource.NotFound, "Comment"));

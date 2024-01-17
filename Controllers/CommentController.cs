@@ -1,7 +1,5 @@
-﻿using Golbaus_BE.Commons.Constants;
-using Golbaus_BE.DTOs;
+﻿using Golbaus_BE.DTOs;
 using Golbaus_BE.DTOs.Comments;
-using Golbaus_BE.DTOs.Posts;
 using Golbaus_BE.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -88,6 +86,32 @@ namespace Golbaus_BE.Controllers
 			req.Format();
 			var result = _commentService.GetPostCommentReplies(postId, commentId, req);
 			return errors.IsEmpty ? Ok(result) : BadRequest(errors);
+		}
+
+		[HttpPut("ToggleUpVotePostComment/{commentId}")]
+		public IActionResult ToggleUpVotePostComment(Guid commentId)
+		{
+			ErrorModel errors = new ErrorModel();
+			if (!ModelState.IsValid)
+			{
+				AddErrorsFromModelState(ref errors);
+				return BadRequest(errors);
+			}
+			_commentService.ToggleUpVotePostComment(commentId, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
+
+		[HttpPut("ToggleDownVotePostComment/{commentId}")]
+		public IActionResult ToggleDownVotePostComment(Guid commentId)
+		{
+			ErrorModel errors = new ErrorModel();
+			if (!ModelState.IsValid)
+			{
+				AddErrorsFromModelState(ref errors);
+				return BadRequest(errors);
+			}
+			_commentService.ToggleDownVotePostComment(commentId, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
 		}
 	}
 }

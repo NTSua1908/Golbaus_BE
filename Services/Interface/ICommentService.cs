@@ -10,5 +10,7 @@ namespace Golbaus_BE.Services.Interface
 		PaginationModel<CommentDetailModel> GetPostCommentReplies(Guid PostId, Guid CommentId, PaginationRequest req);
 		void UpdateCommentPost(Guid id, CommentUpdateModel model, ErrorModel errors);
 		void DeletePostComment(Guid id, ErrorModel errors);
+		void ToggleUpVotePostComment(Guid id, ErrorModel errors);
+		void ToggleDownVotePostComment(Guid id, ErrorModel errors);
 	}
 }
