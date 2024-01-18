@@ -15,13 +15,22 @@ namespace Golbaus_BE.Services.Implement
 			_configuration = configuration;
 		}
 
-		public async Task SendMailConfirmAsync(EmailContent content, string hostName, string name, string token, string email)
+		public async Task SendMailConfirmAsync(EmailContent content, string name, string token, string email)
 		{
 			string UIBaseURL = _configuration.GetSection("UIBaseUrl").Value;
 
 			var confirmationLink = @$"{UIBaseURL}/ConfirmEmail/{token.Replace("/", "@")}/{email}";
 			var resendConfirmationLink = @$"{UIBaseURL}/CheckEmail/{email}";
 			content.Body = string.Format(EmailConstant.ConfirmEmail, name, confirmationLink, resendConfirmationLink);
+			await SendMail(content);
+		}
+
+		public async Task SendMailResetPasswordAsync(EmailContent content, string name, string token, string email)
+		{
+			string UIBaseURL = _configuration.GetSection("UIBaseUrl").Value;
+
+			var resetPasswordLink = @$"{UIBaseURL}/ResetPassword/{token.Replace("/", "@")}/{email}";
+			content.Body = string.Format(EmailConstant.ResetPassword, name, resetPasswordLink);
 			await SendMail(content);
 		}
 

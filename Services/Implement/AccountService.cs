@@ -27,7 +27,7 @@ namespace Golbaus_BE.Services.Implement
 			_emailService = emailService;
 		}
 
-		public async Task<ErrorModel> CreateUser(CreateUserModel model, string hostName)
+		public async Task<ErrorModel> CreateUser(CreateUserModel model)
 		{
 			ErrorModel errors = new ErrorModel();
 			if (ValidateCreatUser(model, errors))
@@ -43,7 +43,7 @@ namespace Golbaus_BE.Services.Implement
 					{
 						Subject = "Xác nhận email",
 						To = user.Email
-					}, hostName, user.FullName, token, user.Email));
+					}, user.FullName, token, user.Email));
 				}
 			}
 			return errors;
@@ -58,11 +58,38 @@ namespace Golbaus_BE.Services.Implement
 			return new UserGetByTokenModel(user);
 		}
 
+		public GetDetailModel GetDetailByToken(ErrorModel errors)
+		{
+			if (ValidateUser(errors, out User user))
+			{
+				return new GetDetailModel(user);
+			}
+			return new GetDetailModel();
+		}
+
+		public void UpdateByToken(UserUpdateByTokenModel model, ErrorModel errors)
+		{
+			if (ValidateUpdateByToken(model, errors, out User user))
+			{
+				string password = string.IsNullOrEmpty(model.Password) ? "" : HashPassword(model.Password);
+				model.UpdateEntity(user, password);
+				_dbContext.SaveChanges();
+			}
+		}
+
+		public void UpdateAvatarByToken(UpdateAvatarModel model, ErrorModel errors)
+		{
+			if (ValidateUser(errors, out User user))
+			{
+				user.Avatar = model.Avatar;
+				_dbContext.SaveChanges();
+			}
+		}
+
 		#region Helper
 
 		private bool ValidateCreatUser(CreateUserModel model, ErrorModel errors) 
 		{
-			FormatCreatUserModel(model);
 			var user = _dbContext.Users.Where(x => x.NormalizedEmail == model.Email.ToUpper() || x.NormalizedUserName == model.UserName.ToUpper());
 			if (user != null)
 			{
@@ -83,19 +110,33 @@ namespace Golbaus_BE.Services.Implement
 			return errors.IsEmpty;
 		}
 
+		private bool ValidateUpdateByToken(UserUpdateByTokenModel model, ErrorModel errors, out User user)
+		{
+			if (ValidateUser(errors, out user))
+			{
+				if (!string.IsNullOrEmpty(model.Password) && !string.Equals(model.Password, model.ConfirmPassword))
+				{
+					errors.Add(ErrorResource.PasswordNotMatch);
+				}
+			}
+
+			return errors.IsEmpty;
+		}
+
 		private string HashPassword(string password)
 		{
 			PasswordHasher<User> hasher = new PasswordHasher<User>();
 			return hasher.HashPassword(null, password);
 		}
 
-		private void FormatCreatUserModel(CreateUserModel model)
+		private bool ValidateUser( ErrorModel errors, out User user)
 		{
-			model.UserName = model.UserName.Trim();
-			model.Email = model.Email.Trim();
-			model.FullName = model.FullName.Trim();
-			model.Password = model.Password.Trim();
-			model.ConfirmPassword = model.ConfirmPassword.Trim();
+			user = _dbContext.Users.FirstOrDefault(x => x.Id == _userResolverService.GetUser());
+			if (user == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "User"));
+			}
+			return errors.IsEmpty;
 		}
 
 		#endregion

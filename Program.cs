@@ -1,3 +1,4 @@
+using Golbaus_BE.Commons.Helper;
 using Golbaus_BE.Entities;
 using Golbaus_BE.Extentions;
 using Hangfire;
@@ -7,7 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+	options.JsonSerializerOptions.Converters.Add(new TrimStringConverter());
+}); ;
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -77,6 +81,8 @@ if (app.Environment.IsDevelopment())
 //);
 
 app.UseSession();
+
+//app.UseStringTrimmingMiddleware();
 
 app.UseHangfireDashboard("/hangfire");
 

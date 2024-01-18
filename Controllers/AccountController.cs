@@ -43,17 +43,54 @@ namespace Golbaus_BE.Controllers
 				return BadRequest(errors);
 			}
 
-			errors = await _accountService.CreateUser(model, _httpContextAccessor.HttpContext.Request.Host.Value);
+			errors = await _accountService.CreateUser(model);
 			if (!errors.IsEmpty)
 				return BadRequest(errors);
 			return Ok();
 		}
+
+		[HttpPut("UpdateByToken")]
+		public IActionResult UpdateByToken([FromBody] UserUpdateByTokenModel model)
+		{
+			ErrorModel errors = new ErrorModel();
+			if (!ModelState.IsValid)
+			{
+				AddErrorsFromModelState(ref errors);
+				return BadRequest(errors);
+			}
+
+			_accountService.UpdateByToken(model, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
+
+		[HttpPut("UpdateAvatarByToken")]
+		public IActionResult UpdateAvatarByToken([FromBody] UpdateAvatarModel model)
+		{
+			ErrorModel errors = new ErrorModel();
+			if (!ModelState.IsValid)
+			{
+				AddErrorsFromModelState(ref errors);
+				return BadRequest(errors);
+			}
+
+			_accountService.UpdateAvatarByToken(model, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
+
 
 		[HttpGet("GetByToken")]
 		public IActionResult GetByToken()
 		{
 			UserGetByTokenModel result = _accountService.GetByToken();
 			return Ok(result);
+		}
+
+		[HttpGet("GetDetailByToken")]
+		public IActionResult GetDetailByToken()
+		{
+			ErrorModel errors = new ErrorModel();
+			GetDetailModel result = _accountService.GetDetailByToken(errors);
+			return errors.IsEmpty ? Ok(result) : BadRequest(errors);
 		}
 	}
 }

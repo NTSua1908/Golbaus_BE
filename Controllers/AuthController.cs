@@ -13,6 +13,8 @@ using Role = Golbaus_BE.Commons.Constants.Role;
 using Golbaus_BE.Services.Implement;
 using Golbaus_BE.DTOs.Users;
 using Hangfire;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Golbaus_BE.Controllers
 {
@@ -138,9 +140,62 @@ namespace Golbaus_BE.Controllers
 			{
 				Subject = "Xác nhận email",
 				To = user.Email
-			}, _httpContextAccessor.HttpContext.Request.Host.Value, user.FullName, token, user.Email));
+			}, user.FullName, token, user.Email));
 
 			return Ok();
+		}
+
+		[HttpGet]
+		[Route("SendEmailResetPassword/{email}")]
+		public async Task<IActionResult> SendEmailResetPassword(string email)
+		{
+			ErrorModel errors = new ErrorModel();
+			var user = await _userManager.FindByEmailAsync(email);
+			if (user == null)
+			{
+				errors.Add(String.Format(ErrorResource.NotFound, "User"));
+				return BadRequest(errors);
+			}
+
+			var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+			BackgroundJob.Enqueue(() => _emailService.SendMailResetPasswordAsync(new EmailContent()
+			{
+				Subject = "Xác nhận email",
+				To = user.Email
+			}, user.FullName, token, user.Email));
+
+			return Ok();
+		}
+
+
+		[HttpPut("ResetPassword")]
+		public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
+		{
+			ErrorModel errors = new ErrorModel();
+			if (!ModelState.IsValid)
+			{
+				AddErrorsFromModelState(ref errors);
+				return BadRequest(errors);
+			}
+
+			var user = await _userManager.FindByEmailAsync(model.Email);
+			if (user == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "User"));
+			}
+			else
+			{
+				IdentityResult result = await _userManager.ResetPasswordAsync(user, model.Token.Replace("@", "/"), model.Password);
+				if (result.Succeeded)
+				{
+					return Ok();
+				}
+				else
+				{
+					errors.Errors.Add(ErrorResource.TokenExpried);
+				}
+			}
+			return BadRequest(errors);
 		}
 	}
 }

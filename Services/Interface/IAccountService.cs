@@ -5,7 +5,10 @@ namespace Golbaus_BE.Services.Interface
 {
 	public interface IAccountService
 	{
-		Task<ErrorModel> CreateUser(CreateUserModel model, string hostName);
+		Task<ErrorModel> CreateUser(CreateUserModel model);
 		UserGetByTokenModel GetByToken();
+		GetDetailModel GetDetailByToken(ErrorModel errors);
+		void UpdateByToken(UserUpdateByTokenModel model, ErrorModel errors);
+		void UpdateAvatarByToken(UpdateAvatarModel model, ErrorModel errors);
 	}
 }
