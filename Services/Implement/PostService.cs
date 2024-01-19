@@ -207,7 +207,76 @@ namespace Golbaus_BE.Services.Implement
 			}
 		}
 
+		public PaginationModel<PostListModel> GetAll(PaginationPostQuestionRequest req)
+		{
+			var posts = _dbContext.Posts.Include(x => x.CommentPosts).Include(x => x.User)
+										.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
+										.Where(x => !x.IsDeleted && x.PublishType == PublishType.Public);
+			Filter(req, ref posts);
+
+			if (req.Tags != null)
+			{
+				var result = posts.AsEnumerable();
+				req.Tags = req.Tags.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLower()).ToList();
+				result = result.Where(p => req.Tags.All(t => p.PostTagMaps.Any(m => m.Tag.Name.ToLower().Contains(t))));
+				return new PaginationModel<PostListModel>(req, result.Select(x => new PostListModel(x)));
+			}
+
+			return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
+		}
+
+		public PaginationModel<PostListModel> GetAllByToken(PaginationPostQuestionRequest req)
+		{
+			string userId = _userResolverService.GetUser();
+			var posts = _dbContext.Posts.Include(x => x.CommentPosts).Include(x => x.User)
+										.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
+										.Where(x => x.UserId == userId);
+			Filter(req, ref posts);
+
+			if (req.Tags != null)
+			{
+				var result = posts.AsEnumerable();
+				req.Tags = req.Tags.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLower()).ToList();
+				result = result.Where(p => req.Tags.All(t => p.PostTagMaps.Any(m => m.Tag.Name.ToLower().Contains(t))));
+				return new PaginationModel<PostListModel>(req, result.Select(x => new PostListModel(x)));
+			}
+
+			return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
+		}
+
 		#region Helper
+
+		private void Filter(PaginationPostQuestionRequest req, ref IQueryable<Post> data)
+		{
+			if (!string.IsNullOrEmpty(req.SearchText))
+			{
+				req.SearchText = req.SearchText.ToLower();
+				data = data.Where(x => x.Title.ToLower().Contains(req.SearchText));
+			}
+			if (req.PublishDateFrom.HasValue)
+			{
+				data = data.Where(x => x.PublishDate.HasValue && x.PublishDate.Value >= req.PublishDateFrom.Value);
+			}
+			if (req.PublishDateTo.HasValue)
+			{
+				data = data.Where(x => x.PublishDate.HasValue && x.PublishDate.Value <= req.PublishDateTo.Value);
+			}
+			if (req.OrderBy.HasValue)
+			{
+				switch (req.OrderBy.Value)
+				{
+					case OrderBy.PublishDate:
+						data = (!req.OrderType.HasValue || req.OrderType == OrderType.Ascending) ? data.OrderBy(x => x.PublishDate) : data.OrderByDescending(x => x.PublishDate);
+						break;
+					case OrderBy.Vote:
+						data = (!req.OrderType.HasValue || req.OrderType == OrderType.Ascending) ? data.OrderBy(x => x.UpVote - x.DownVote) : data.OrderByDescending(x => x.UpVote - x.DownVote);
+						break;
+					case OrderBy.View:
+						data = (!req.OrderType.HasValue || req.OrderType == OrderType.Ascending) ? data.OrderBy(x => x.ViewCount) : data.OrderByDescending(x => x.ViewCount);
+						break;
+				}
+			}
+		}
 
 		private bool ValidateCreatePost(string userId, PostCreateModel model, ErrorModel errors, out User user)
 		{

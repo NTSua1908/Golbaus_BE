@@ -13,7 +13,7 @@
 		{
 			Data = new List<T>();
 		}
-		public PaginationModel(PaginationRequest request, IQueryable<T> list)
+		public PaginationModel(PaginationRequest request, IEnumerable<T> list)
 		{
 
 			Sort = request.Sort;

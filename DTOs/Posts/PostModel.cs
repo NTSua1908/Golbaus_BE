@@ -127,4 +127,31 @@ namespace Golbaus_BE.DTOs.Posts
 			Tags = post.PostTagMaps.Select(x => x.Tag.Name).ToList();
 		}
 	}
+
+	public class PostListModel
+	{
+		public Guid Id { get; set; }
+		public string Title { get; set; }
+		public string Excerpt { get; set; }
+		public string Thumbnail { get; set; }
+        public int UpVote { get; set; }
+        public int DownVote { get; set; }
+		public int CommentCount { get; set; }
+		public int ViewCount { get; set; }
+		public DateTime? PublishDate { get; set; }
+		public string AuthorName { get; set; }
+
+		public PostListModel(Post post)
+		{
+			Id = post.Id;
+			Title = post.Title;
+			Excerpt = post.Excerpt;
+			Thumbnail = post.Thumbnail;
+			AuthorName = post.User.UserName;
+			CommentCount = post.CommentPosts.Count(x => !x.IsDeleted);
+			ViewCount = post.ViewCount;
+			UpVote = post.UpVote;
+			DownVote = post.DownVote;
+		}
+	}
 }

@@ -135,5 +135,22 @@ namespace Golbaus_BE.Controllers
 			_postService.IncreaseView(postId, errors);
 			return errors.IsEmpty ? Ok() : BadRequest(errors);
 		}
+
+		[HttpGet("GetAllByToken")]
+		public IActionResult GetAllByToken(PaginationPostQuestionRequest req)
+		{
+			req.Format();
+			var posts = _postService.GetAllByToken(req);
+			return Ok(posts);
+		}
+
+		[HttpGet("GetAll")]
+		[AllowAnonymous]
+		public IActionResult GetAll(PaginationPostQuestionRequest req)
+		{
+			req.Format();
+			var posts = _postService.GetAll(req);
+			return Ok(posts);
+		}
 	}
 }

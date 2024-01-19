@@ -27,4 +27,17 @@
 		DownVote = 1,
 		Unvote = 2,
 	}
+
+	public enum OrderBy
+	{
+		PublishDate = 0,
+		Vote = 1,
+		View = 2,
+	}
+
+	public enum OrderType
+	{
+		Ascending = 0,
+		Descending = 1,
+	}
 }

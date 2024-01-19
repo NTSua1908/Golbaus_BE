@@ -16,5 +16,7 @@ namespace Golbaus_BE.Services.Interface
 		void ToggleDownVote(Guid id, ErrorModel errors);
 		void PublishTask(Guid id);
 		void IncreaseView(Guid id, ErrorModel errors);
+		PaginationModel<PostListModel> GetAll(PaginationPostQuestionRequest req);
+		PaginationModel<PostListModel> GetAllByToken(PaginationPostQuestionRequest req);
 	}
 }

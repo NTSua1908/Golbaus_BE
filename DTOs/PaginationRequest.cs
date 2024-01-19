@@ -1,4 +1,6 @@
-﻿namespace Golbaus_BE.DTOs
+﻿using Golbaus_BE.Commons.Constants;
+
+namespace Golbaus_BE.DTOs
 {
 	public class PaginationRequest
 	{
@@ -30,4 +32,13 @@
 			}
 		}
 	}
+
+	public class PaginationPostQuestionRequest : PaginationRequest 
+	{
+        public List<string> Tags { get; set; }
+        public DateTime? PublishDateFrom { get; set; }
+        public DateTime? PublishDateTo { get; set; }
+        public OrderBy? OrderBy { get; set; }
+        public OrderType? OrderType { get; set; }
+    }
 }
