@@ -30,11 +30,16 @@ namespace Golbaus_BE.Entities
 		public DbSet<Role> Roles { get; set; }
 		public DbSet<UserRoleMap> UserRoleMaps { get; set; }
 		public DbSet<Post> Posts{ get; set; }
+		public DbSet<Question> Questions{ get; set; }
 		public DbSet<CommentPost> CommentPosts{ get; set; }
 		public DbSet<Tag> Tags { get; set; }
 		public DbSet<PostTagMap> PostTagMaps { get; set; }
 		public DbSet<UserFollowMap> UserFollowMaps { get; set; }
 		public DbSet<PostUserVoteMap> PostUserVoteMaps { get; set; }
 		public DbSet<CommentPostUserVoteMap> CommentPostUserVoteMaps { get; set; }
+		public DbSet<QuestionTagMap> QuestionTagMaps{ get; set; }
+		public DbSet<QuestionUserVoteMap> QuestionUserVoteMaps{ get; set; }
+		public DbSet<CommentQuestionUserVoteMap> CommentQuestionUserVoteMaps{ get; set; }
+		public DbSet<CommentQuestion> CommentQuestions { get; set; }
 	}
 }

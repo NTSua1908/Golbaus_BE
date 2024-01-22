@@ -24,6 +24,20 @@ namespace Golbaus_BE.DTOs.Comments
 				UserId = userId
 			};
 		}
+
+		public CommentQuestion ParseToQuestionCommentEntity(Question question, CommentQuestion parent, string userId)
+		{
+			return new CommentQuestion
+			{
+				Content = Content,
+				ParentId = parent?.Id,
+				QuestionId = question.Id,
+				CreatedDate = DateTime.Now,
+				Remark = "",
+				ReplyFor = ReplyFor,
+				UserId = userId
+			};
+		}
 	}
 
 	public class CommentUpdateModel
@@ -86,6 +100,25 @@ namespace Golbaus_BE.DTOs.Comments
 			UpVote = comment.UpVote;
 			DownVote = comment.DownVote;
 			var vote = comment.CommentPostUserVoteMaps.FirstOrDefault(x => x.UserId == userId);
+			VoteType = vote != null ? vote.Type : VoteType.Unvote;
+			CreatedDate = comment.CreatedDate;
+			UpdatedDate = comment.UpdatedDate;
+			IsMyComment = comment.UserId == userId;
+			Replies = new List<CommentDetailModel>();
+		}
+
+		public CommentDetailModel(CommentQuestion comment, string userId, bool isChild)
+		{
+			Id = comment.Id;
+			Avatar = comment.User.Avatar;
+			FullName = comment.User.FullName;
+			UserName = comment.User.UserName;
+			Content = comment.Content;
+			ReplyFor = comment.ReplyFor;
+			ReplyCount = isChild ? 0 : comment.Childs.Count(x => !x.IsDeleted);
+			UpVote = comment.UpVote;
+			DownVote = comment.DownVote;
+			var vote = comment.CommentQuestionUserVoteMaps.FirstOrDefault(x => x.UserId == userId);
 			VoteType = vote != null ? vote.Type : VoteType.Unvote;
 			CreatedDate = comment.CreatedDate;
 			UpdatedDate = comment.UpdatedDate;

@@ -38,7 +38,6 @@ namespace Golbaus_BE.Services.Implement
 					BackgroundJob.Schedule<IPostService>(x => x.PublishTask(post.Id), (post.PublishDate - DateTime.Now).Value);
 				}
 
-				user.PostCount++;
 				_dbContext.SaveChanges();
 				return post.Id;
 			}
@@ -62,6 +61,7 @@ namespace Golbaus_BE.Services.Implement
 			string userId = _userResolverService.GetUser();
 			Post post = _dbContext.Posts.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
 										.Include(x => x.User).ThenInclude(x => x.UserFollowerMaps)
+										.Include(x => x.User).ThenInclude(x => x.Posts)
 										.Include(x => x.PostUserVoteMaps)
 										.Include(x => x.CommentPosts)
 										.FirstOrDefault(x => x.Id == id && !x.IsDeleted && (x.UserId == userId || x.PublishType == PublishType.Public));
@@ -86,7 +86,6 @@ namespace Golbaus_BE.Services.Implement
 				post.IsDeleted = true;
 				post.UpdatedBy = user.Id;
 				post.UpdatedDate = DateTime.Now;
-				user.PostCount -= 1;
 				_dbContext.SaveChanges();
 			}
 		}
@@ -99,7 +98,6 @@ namespace Golbaus_BE.Services.Implement
 				post.Remark = remark;
 				post.UpdatedBy = user.Id;
 				post.UpdatedDate = DateTime.Now;
-				post.User.PostCount -= 1;
 				_dbContext.SaveChanges();
 			}
 		}
@@ -111,7 +109,6 @@ namespace Golbaus_BE.Services.Implement
 				post.IsDeleted = false;
 				post.UpdatedBy = user.Id;
 				post.UpdatedDate = DateTime.Now;
-				post.User.PostCount += 1;
 				_dbContext.SaveChanges();
 			}
 		}
@@ -281,7 +278,7 @@ namespace Golbaus_BE.Services.Implement
 		private bool ValidateCreatePost(string userId, PostCreateModel model, ErrorModel errors, out User user)
 		{
 			user = _dbContext.Users.Find(userId);
-			if (user == null)
+			if (user == null || user.IsDeleted)
 			{
 				errors.Add(string.Format(ErrorResource.NotFound, "User"));
 			}
@@ -341,7 +338,7 @@ namespace Golbaus_BE.Services.Implement
 			{
 				var user = _dbContext.Users.Include(x => x.UserRoleMaps).ThenInclude(x => x.Role)
 									   .FirstOrDefault(x => x.Id == userId);
-				if (user == null)
+				if (user == null || user.IsDeleted)
 				{
 					errors.Add(string.Format(ErrorResource.NotFound, "User"));
 				}
@@ -360,9 +357,8 @@ namespace Golbaus_BE.Services.Implement
 			}
 			else
 			{
-				user = _dbContext.Users.Include(x => x.UserRoleMaps).ThenInclude(x => x.Role)
-									   .FirstOrDefault(x => x.Id == userId);
-				if (user == null)
+				user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+				if (user == null || user.IsDeleted)
 				{
 					errors.Add(string.Format(ErrorResource.NotFound, "User"));
 				}
@@ -385,8 +381,7 @@ namespace Golbaus_BE.Services.Implement
 			}
 			else
 			{
-				user = _dbContext.Users.Include(x => x.UserRoleMaps).ThenInclude(x => x.Role)
-									   .FirstOrDefault(x => x.Id == userId);
+				user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
 				if (user == null)
 				{
 					errors.Add(string.Format(ErrorResource.NotFound, "User"));
@@ -406,19 +401,10 @@ namespace Golbaus_BE.Services.Implement
 			}
 			else
 			{
-				user = _dbContext.Users.Include(x => x.UserRoleMaps).ThenInclude(x => x.Role)
-									   .FirstOrDefault(x => x.Id == userId);
+				user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
 				if (user == null)
 				{
 					errors.Add(string.Format(ErrorResource.NotFound, "User"));
-				}
-				else if (!user.UserRoleMaps.Any(x =>
-				{
-					Role role = Enum.Parse<Role>(x.Role.Name);
-					return role == Role.Admin || role == Role.SuperAdmin;
-				}))
-				{
-					errors.Add(ErrorResource.DoNotHavePermission);
 				}
 			}
 			return errors.IsEmpty;

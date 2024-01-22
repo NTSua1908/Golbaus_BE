@@ -107,6 +107,67 @@ namespace Golbaus_BE.Extentions
 						.HasForeignKey(x => x.CommentId)
 						.IsRequired();
 			});
+
+			builder.Entity<Question>(question=>
+			{
+				question.HasOne(x => x.User)
+					.WithMany(user => user.Questions)
+					.HasForeignKey(x => x.UserId)
+					.IsRequired();
+			});
+
+			builder.Entity<CommentQuestion>(comment =>
+			{
+				comment.HasOne(x => x.User)
+						.WithMany(user => user.CommentQuestions)
+						.IsRequired();
+				comment.HasOne(x => x.Question)
+						.WithMany(question => question.CommentQuestions)
+						.IsRequired();
+				comment.HasOne(x => x.Parent)
+						.WithMany(x => x.Childs)
+						.HasForeignKey(x => x.ParentId)
+						.OnDelete(DeleteBehavior.Cascade);
+			});
+
+			builder.Entity<QuestionTagMap>(QuestionTagMap =>
+			{
+				QuestionTagMap.HasKey(x => new { x.QuestionId, x.TagId });
+				QuestionTagMap.HasOne(x => x.Question)
+						.WithMany(question => question.QuestionTagMaps)
+						.HasForeignKey(x => x.QuestionId)
+						.IsRequired();
+				QuestionTagMap.HasOne(x => x.Tag)
+						.WithMany(tag => tag.QuestionTagMaps)
+						.HasForeignKey(x => x.TagId)
+						.IsRequired();
+			});
+
+			builder.Entity<QuestionUserVoteMap>(voteMap =>
+			{
+				voteMap.HasKey(x => new { x.UserId, x.QuestionId });
+				voteMap.HasOne(x => x.User)
+						.WithMany(user => user.QuestionUserVoteMaps)
+						.HasForeignKey(x => x.UserId)
+						.IsRequired();
+				voteMap.HasOne(x => x.Question)
+						.WithMany(question => question.QuestionUserVoteMaps)
+						.HasForeignKey(x => x.QuestionId)
+						.IsRequired();
+			});
+
+			builder.Entity<CommentQuestionUserVoteMap>(voteMap =>
+			{
+				voteMap.HasKey(x => new { x.UserId, x.CommentId });
+				voteMap.HasOne(x => x.User)
+						.WithMany(user => user.CommentQuestionUserVoteMaps)
+						.HasForeignKey(x => x.UserId)
+						.IsRequired();
+				voteMap.HasOne(x => x.Comment)
+						.WithMany(comment => comment.CommentQuestionUserVoteMaps)
+						.HasForeignKey(x => x.CommentId)
+						.IsRequired();
+			});
 		}
 	}
 }

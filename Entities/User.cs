@@ -13,12 +13,16 @@ namespace Golbaus_BE.Entities
         public Gender Gender { get; set; }
         public string Avatar { get; set; }
         public string Bio { get; set; }
-        public int PostCount { get; set; }
-        public virtual ICollection<UserRoleMap> UserRoleMaps { get; set; }
+		public bool IsDeleted { get; set; }
+		public virtual ICollection<UserRoleMap> UserRoleMaps { get; set; }
 		public virtual ICollection<Post> Posts { get; set; }
+		public virtual ICollection<Question> Questions{ get; set; }
 		public virtual ICollection<CommentPost> CommentPosts { get; set; }
+		public virtual ICollection<CommentQuestion> CommentQuestions { get; set; }
 		public virtual ICollection<CommentPostUserVoteMap> CommentPostUserVoteMaps { get; set; }
+		public virtual ICollection<CommentQuestionUserVoteMap> CommentQuestionUserVoteMaps { get; set; }
 		public virtual ICollection<PostUserVoteMap> PostUserVoteMaps { get; set; }
+		public virtual ICollection<QuestionUserVoteMap> QuestionUserVoteMaps { get; set; }
 		public virtual ICollection<UserFollowMap> UserFollowerMaps{ get; set; }
 		public virtual ICollection<UserFollowMap> UserFollowingMaps{ get; set; }
 	}

@@ -19,12 +19,13 @@ namespace Golbaus_BE.Services.Implement
 			_dbContext = dbContext;
 			_userResolverService = userResolverService;
 		}
+		#region Post
 
 		public CommentDetailModel CreateCommentPost(CommentCreateModel model, ErrorModel errors)
 		{
-			if (ValidateCreateCommentPost(model, errors, out Post post, out CommentPost comment, out User user))
+			if (ValidateCreateCommentPost(model, errors, out Post post, out CommentPost parentComment, out User user))
 			{
-				CommentPost newComment = model.ParseToPostCommentEntity(post, comment, user.Id);
+				CommentPost newComment = model.ParseToPostCommentEntity(post, parentComment, user.Id);
 				_dbContext.CommentPosts.Add(newComment);
 				_dbContext.SaveChanges();
 				return new CommentDetailModel(newComment, user);
@@ -121,9 +122,9 @@ namespace Golbaus_BE.Services.Implement
 		}
 
 		#region Helper
-		private bool ValidateCreateCommentPost(CommentCreateModel model, ErrorModel errors, out Post post, out CommentPost comment, out User user)
+		private bool ValidateCreateCommentPost(CommentCreateModel model, ErrorModel errors, out Post post, out CommentPost parentComment, out User user)
 		{
-			comment = null;
+			parentComment = null;
 			post = null;
 			if (ValidateUser(errors, out user))
 			{
@@ -134,8 +135,8 @@ namespace Golbaus_BE.Services.Implement
 				}
 				else if (model.ParentId.HasValue)
 				{
-					comment = _dbContext.CommentPosts.Include(x => x.User).FirstOrDefault(x => x.Id == model.ParentId);
-					if (comment == null)
+					parentComment = _dbContext.CommentPosts.Include(x => x.User).FirstOrDefault(x => x.Id == model.ParentId);
+					if (parentComment == null)
 					{
 						errors.Add(string.Format(ErrorResource.NotFound, "The comment you are trying to reply to"));
 					}
@@ -210,6 +211,192 @@ namespace Golbaus_BE.Services.Implement
 			return errors.IsEmpty;
 		}
 
+		#endregion
+		#endregion
+
+		#region Question
+
+		public CommentDetailModel CreateCommentQuestion(CommentCreateModel model, ErrorModel errors)
+		{
+			if (ValidateCreateCommentQuestion(model, errors, out Question question, out CommentQuestion parentComment, out User user))
+			{
+				CommentQuestion newComment = model.ParseToQuestionCommentEntity(question, parentComment, user.Id);
+				_dbContext.CommentQuestions.Add(newComment);
+				_dbContext.SaveChanges();
+				return new CommentDetailModel(newComment, user);
+			}
+			return new CommentDetailModel();
+		}
+
+		public void UpdateCommentQuestion(Guid id, CommentUpdateModel model, ErrorModel errors)
+		{
+			if (ValidateUpdateCommentQuestion(id, model, errors, out CommentQuestion comment))
+			{
+				model.UpdateEntity(comment);
+				_dbContext.SaveChanges();
+			}
+		}
+
+		public PaginationModel<CommentDetailModel> GetQuestionComments(Guid QuestionId, PaginationRequest req)
+		{
+			string userId = _userResolverService.GetUser();
+			var comments = _dbContext.CommentQuestions.Include(x => x.User).Include(x => x.Childs).Include(x => x.CommentQuestionUserVoteMaps)
+					.Where(x => x.QuestionId == QuestionId && !x.IsDeleted && x.ParentId == null).OrderBy(x => x.CreatedDate);
+			return new PaginationModel<CommentDetailModel>(req, comments.Select(x => new CommentDetailModel(x, userId, false)));
+		}
+
+		public PaginationModel<CommentDetailModel> GetQuestionCommentReplies(Guid QuestionId, Guid CommentId, PaginationRequest req)
+		{
+			string userId = _userResolverService.GetUser();
+			var comments = _dbContext.CommentQuestions.Include(x => x.User).Include(x => x.Childs).Include(x => x.CommentQuestionUserVoteMaps)
+					.Where(x => x.QuestionId == QuestionId && x.ParentId == CommentId && !x.IsDeleted).OrderBy(x => x.CreatedDate);
+			return new PaginationModel<CommentDetailModel>(req, comments.Select(x => new CommentDetailModel(x, userId, true)));
+		}
+
+		public void DeleteQuestionComment(Guid id, ErrorModel errors)
+		{
+			if (ValidateDeleteCommentQuestion(id, errors, out CommentQuestion comment))
+			{
+				comment.IsDeleted = true;
+				comment.UpdatedDate = DateTime.Now;
+
+				_dbContext.SaveChanges();
+			}
+		}
+
+		public void ToggleUpVoteQuestionComment(Guid id, ErrorModel errors)
+		{
+			string userId = _userResolverService.GetUser();
+			if (ValidateVoteComment(id, userId, errors, out CommentQuestion comment))
+			{
+				var voted = _dbContext.CommentQuestionUserVoteMaps.FirstOrDefault(x => x.CommentId == comment.Id && x.UserId == userId);
+				if (voted == null)
+				{
+					_dbContext.CommentQuestionUserVoteMaps.Add(new CommentQuestionUserVoteMap { CommentId = comment.Id, UserId = userId, Type = VoteType.UpVote });
+					comment.UpVote += 1;
+				}
+				else if (voted.Type == VoteType.DownVote)
+				{
+					voted.Type = VoteType.UpVote;
+					comment.UpVote += 1;
+					comment.DownVote -= 1;
+				}
+				else if (voted.Type == VoteType.UpVote)
+				{
+					comment.UpVote -= 1;
+					_dbContext.CommentQuestionUserVoteMaps.Remove(voted);
+				}
+				_dbContext.SaveChanges();
+			}
+		}
+
+		public void ToggleDownVoteQuestionComment(Guid id, ErrorModel errors)
+		{
+			string userId = _userResolverService.GetUser();
+			if (ValidateVoteComment(id, userId, errors, out CommentQuestion comment))
+			{
+				var voted = _dbContext.CommentQuestionUserVoteMaps.FirstOrDefault(x => x.CommentId == comment.Id && x.UserId == userId);
+				if (voted == null)
+				{
+					_dbContext.CommentQuestionUserVoteMaps.Add(new CommentQuestionUserVoteMap { CommentId = comment.Id, UserId = userId, Type = VoteType.DownVote });
+					comment.DownVote += 1;
+				}
+				else if (voted.Type == VoteType.UpVote)
+				{
+					voted.Type = VoteType.DownVote;
+					comment.UpVote -= 1;
+					comment.DownVote += 1;
+				}
+				else if (voted.Type == VoteType.DownVote)
+				{
+					comment.DownVote -= 1;
+					_dbContext.CommentQuestionUserVoteMaps.Remove(voted);
+				}
+				_dbContext.SaveChanges();
+			}
+		}
+
+		#region Helper
+		private bool ValidateCreateCommentQuestion(CommentCreateModel model, ErrorModel errors, out Question question, out CommentQuestion parentComment, out User user)
+		{
+			parentComment = null;
+			question = null;
+			if (ValidateUser(errors, out user))
+			{
+				question = _dbContext.Questions.FirstOrDefault(x => x.Id == model.PostId);
+				if (question == null)
+				{
+					errors.Add(string.Format(ErrorResource.NotFound, "Question"));
+				}
+				else if (model.ParentId.HasValue)
+				{
+					parentComment = _dbContext.CommentQuestions.Include(x => x.User).FirstOrDefault(x => x.Id == model.ParentId);
+					if (parentComment == null)
+					{
+						errors.Add(string.Format(ErrorResource.NotFound, "The comment you are trying to reply to"));
+					}
+				}
+			}
+
+			return errors.IsEmpty;
+		}
+
+		private bool ValidateUpdateCommentQuestion(Guid id, CommentUpdateModel model, ErrorModel errors, out CommentQuestion comment)
+		{
+			comment = null;
+			if (ValidateUser(errors, out User user))
+			{
+				comment = _dbContext.CommentQuestions.FirstOrDefault(x => x.Id == id && x.UserId == user.Id && !x.IsDeleted);
+				if (comment == null)
+				{
+					errors.Add(string.Format(ErrorResource.NotFound, "Comment"));
+				}
+				else if (string.IsNullOrEmpty(model.Content))
+				{
+					errors.Add(string.Format(ErrorResource.MissingRequired, "Content"));
+				}
+			}
+
+			return errors.IsEmpty;
+		}
+
+
+		private bool ValidateDeleteCommentQuestion(Guid id, ErrorModel errors, out CommentQuestion comment)
+		{
+			comment = null;
+			if (ValidateUser(errors, out User user))
+			{
+				comment = _dbContext.CommentQuestions.FirstOrDefault(x => x.Id == id && x.UserId == user.Id && !x.IsDeleted);
+				if (comment == null)
+				{
+					errors.Add(string.Format(ErrorResource.NotFound, "Comment"));
+				}
+			}
+
+			return errors.IsEmpty;
+		}
+
+		private bool ValidateVoteComment(Guid id, string userId, ErrorModel errors, out CommentQuestion comment)
+		{
+			comment = null;
+			var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+			if (user == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "User"));
+			}
+			else
+			{
+				comment = _dbContext.CommentQuestions.FirstOrDefault(x => x.Id == id && !x.IsDeleted);
+				if (comment == null)
+				{
+					errors.Add(string.Format(ErrorResource.NotFound, "Comment"));
+				}
+			}
+
+			return errors.IsEmpty;
+		}
+
+		#endregion
 		#endregion
 	}
 }

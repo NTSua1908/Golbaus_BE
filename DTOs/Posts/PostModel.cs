@@ -94,10 +94,10 @@ namespace Golbaus_BE.DTOs.Posts
 		public int FollowCount { get; set; }
 		public int CommentCount { get; set; }
 		public int ViewCount { get; set; }
-        public VoteType? Vote { get; set; }
-        public PublishType PublishType { get; set; }
+		public VoteType? Vote { get; set; }
+		public PublishType PublishType { get; set; }
 		public DateTime? WillBePublishedOn { get; set; }
-        public List<string> Tags { get; set; }
+		public List<string> Tags { get; set; }
 
 		public PostDetailModel() { }
 
@@ -116,7 +116,7 @@ namespace Golbaus_BE.DTOs.Posts
 			Avatar = post.User.Avatar;
 			IsFollowed = post.User.UserFollowerMaps.Any(x => x.FollowerId == viewerId);
 			IsMyPost = viewerId == post.UserId;
-			PostCount = post.User.PostCount;
+			PostCount = post.User.Posts.Count;
 			FollowCount = post.User.UserFollowerMaps.Count();
 			CommentCount = post.CommentPosts.Count(x => !x.IsDeleted);
 			ViewCount = post.ViewCount;
@@ -134,8 +134,8 @@ namespace Golbaus_BE.DTOs.Posts
 		public string Title { get; set; }
 		public string Excerpt { get; set; }
 		public string Thumbnail { get; set; }
-        public int UpVote { get; set; }
-        public int DownVote { get; set; }
+		public int UpVote { get; set; }
+		public int DownVote { get; set; }
 		public int CommentCount { get; set; }
 		public int ViewCount { get; set; }
 		public DateTime? PublishDate { get; set; }

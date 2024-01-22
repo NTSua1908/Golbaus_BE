@@ -40,6 +40,7 @@ namespace Golbaus_BE.Extentions
 			services.AddScoped<IAccountService, AccountService>();
 			services.AddScoped<ICommentService, CommentService>();
 			services.AddScoped<IPostService, PostService>();
+			services.AddScoped<IQuestionService, QuestionService>();
 			services.AddScoped<ITagService, TagService>();
 			services.AddScoped<IEmailService, EmailService>();
 			services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

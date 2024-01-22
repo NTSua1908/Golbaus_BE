@@ -9,5 +9,6 @@ namespace Golbaus_BE.Entities
 		public Guid Id { get; set; }
         public string Name { get; set; }
 		public virtual ICollection<PostTagMap> PostTagMaps { get; set; }
+		public virtual ICollection<QuestionTagMap> QuestionTagMaps { get; set; }
 	}
 }
