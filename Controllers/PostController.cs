@@ -152,5 +152,22 @@ namespace Golbaus_BE.Controllers
 			var posts = _postService.GetAll(req);
 			return Ok(posts);
 		}
+
+		[HttpGet("GetAllByUser/{userId}")]
+		[AllowAnonymous]
+		public IActionResult GetAllByUser(string userId, PaginationPostQuestionRequest req)
+		{
+			req.Format();
+			var posts = _postService.GetAllByUser(userId, req);
+			return Ok(posts);
+		}
+
+		[HttpPut("ToggleAddBookmark/{postId}")]
+		public IActionResult ToggleAddBookmark(Guid postId)
+		{
+			ErrorModel errors = new ErrorModel();
+			_postService.ToggleAddBookmark(postId, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
 	}
 }

@@ -92,5 +92,22 @@ namespace Golbaus_BE.Controllers
 			GetDetailModel result = _accountService.GetDetailByToken(errors);
 			return errors.IsEmpty ? Ok(result) : BadRequest(errors);
 		}
+
+		[HttpGet("GetDetailById/{userId}")]
+		[AllowAnonymous]
+		public IActionResult GetDetailByToken(string userId)
+		{
+			ErrorModel errors = new ErrorModel();
+			GetDetailModel result = _accountService.GetDetailById(userId, errors);
+			return errors.IsEmpty ? Ok(result) : BadRequest(errors);
+		}
+
+		[HttpPut("ToggleFollow/{userId}")]
+		public IActionResult ToggleFollow(string userId)
+		{
+			ErrorModel errors = new ErrorModel();
+			_accountService.ToggleFollow(userId, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
 	}
 }

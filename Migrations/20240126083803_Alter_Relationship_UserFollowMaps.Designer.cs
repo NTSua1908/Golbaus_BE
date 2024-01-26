@@ -3,6 +3,7 @@ using System;
 using Golbaus_BE.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Golbaus_BE.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    partial class ApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240126083803_Alter_Relationship_UserFollowMaps")]
+    partial class Alter_Relationship_UserFollowMaps
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -216,21 +219,6 @@ namespace Golbaus_BE.Migrations
                     b.ToTable("Posts");
                 });
 
-            modelBuilder.Entity("Golbaus_BE.Entities.PostBookmark", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("UserId", "PostId");
-
-                    b.HasIndex("PostId");
-
-                    b.ToTable("PostBookmarks");
-                });
-
             modelBuilder.Entity("Golbaus_BE.Entities.PostTagMap", b =>
                 {
                     b.Property<Guid>("PostId")
@@ -309,21 +297,6 @@ namespace Golbaus_BE.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Questions");
-                });
-
-            modelBuilder.Entity("Golbaus_BE.Entities.QuestionBookmark", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<Guid>("QuestionId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("UserId", "QuestionId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("QuestionBookmarks");
                 });
 
             modelBuilder.Entity("Golbaus_BE.Entities.QuestionTagMap", b =>
@@ -527,7 +500,7 @@ namespace Golbaus_BE.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@GMAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEN4ol+IKJiR+kJgFl4bROV7muZYRW2S6uSv8a76wfu3v8D0B53TT8Di9TsPcbes4XA==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEDpTQxP+BkwTH6UwAgCtciBOHUzOKR0vlD0hHNcWYLBW7M9tjpjU2SbhJuXPm2KrzA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "",
                             TwoFactorEnabled = false,
@@ -547,7 +520,7 @@ namespace Golbaus_BE.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEH/GZW6aCIM+YoCtghTwtrbKQYYrFV+6clSUgijCc46MniZzTjQc89yia8AAfRXLZg==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEB9rIQ9PQTREerVe7HEJN+6ESU9MQR6zR1XCUpTN/kRaa/nXBE2IET6Kv+l5DodsCQ==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "",
                             TwoFactorEnabled = false,
@@ -785,25 +758,6 @@ namespace Golbaus_BE.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Golbaus_BE.Entities.PostBookmark", b =>
-                {
-                    b.HasOne("Golbaus_BE.Entities.Post", "Post")
-                        .WithMany("PostBookmarks")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Golbaus_BE.Entities.User", "User")
-                        .WithMany("PostBookmarks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Golbaus_BE.Entities.PostTagMap", b =>
                 {
                     b.HasOne("Golbaus_BE.Entities.Post", "Post")
@@ -849,25 +803,6 @@ namespace Golbaus_BE.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Golbaus_BE.Entities.QuestionBookmark", b =>
-                {
-                    b.HasOne("Golbaus_BE.Entities.Question", "Question")
-                        .WithMany("QuestionBookmarks")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Golbaus_BE.Entities.User", "User")
-                        .WithMany("QuestionBookmarks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Question");
 
                     b.Navigation("User");
                 });
@@ -1002,8 +937,6 @@ namespace Golbaus_BE.Migrations
                 {
                     b.Navigation("CommentPosts");
 
-                    b.Navigation("PostBookmarks");
-
                     b.Navigation("PostTagMaps");
 
                     b.Navigation("PostUserVoteMaps");
@@ -1012,8 +945,6 @@ namespace Golbaus_BE.Migrations
             modelBuilder.Entity("Golbaus_BE.Entities.Question", b =>
                 {
                     b.Navigation("CommentQuestions");
-
-                    b.Navigation("QuestionBookmarks");
 
                     b.Navigation("QuestionTagMaps");
 
@@ -1042,13 +973,9 @@ namespace Golbaus_BE.Migrations
 
                     b.Navigation("CommentQuestions");
 
-                    b.Navigation("PostBookmarks");
-
                     b.Navigation("PostUserVoteMaps");
 
                     b.Navigation("Posts");
-
-                    b.Navigation("QuestionBookmarks");
 
                     b.Navigation("QuestionUserVoteMaps");
 

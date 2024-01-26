@@ -1,6 +1,5 @@
 ﻿using Golbaus_BE.Commons.Constants;
 using Golbaus_BE.DTOs;
-using Golbaus_BE.DTOs.Posts;
 using Golbaus_BE.DTOs.Questions;
 using Golbaus_BE.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -152,6 +151,23 @@ namespace Golbaus_BE.Controllers
 			req.Format();
 			var posts = _questionService.GetAll(req);
 			return Ok(posts);
+		}
+
+		[HttpGet("GetAllByUser/{userId}")]
+		[AllowAnonymous]
+		public IActionResult GetAllByUser(string userId, PaginationPostQuestionRequest req)
+		{
+			req.Format();
+			var posts = _questionService.GetAllByUser(userId, req);
+			return Ok(posts);
+		}
+
+		[HttpPut("ToggleAddBookmark/{questionId}")]
+		public IActionResult ToggleAddBookmark(Guid questionId)
+		{
+			ErrorModel errors = new ErrorModel();
+			_questionService.ToggleAddBookmark(questionId, errors);
+			return errors.IsEmpty ? Ok() : BadRequest(errors);
 		}
 	}
 }

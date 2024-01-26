@@ -41,5 +41,7 @@ namespace Golbaus_BE.Entities
 		public DbSet<QuestionUserVoteMap> QuestionUserVoteMaps{ get; set; }
 		public DbSet<CommentQuestionUserVoteMap> CommentQuestionUserVoteMaps{ get; set; }
 		public DbSet<CommentQuestion> CommentQuestions { get; set; }
+		public DbSet<PostBookmark> PostBookmarks { get; set; }
+		public DbSet<QuestionBookmark> QuestionBookmarks { get; set; }
 	}
 }

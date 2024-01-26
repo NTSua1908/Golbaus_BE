@@ -64,6 +64,7 @@ namespace Golbaus_BE.Services.Implement
 										.Include(x => x.User).ThenInclude(x => x.Posts)
 										.Include(x => x.PostUserVoteMaps)
 										.Include(x => x.CommentPosts)
+										.Include(x => x.PostBookmarks)
 										.FirstOrDefault(x => x.Id == id && !x.IsDeleted && (x.UserId == userId || x.PublishType == PublishType.Public));
 			if (post == null)
 			{
@@ -178,7 +179,7 @@ namespace Golbaus_BE.Services.Implement
 
 		public void IncreaseView(Guid id, ErrorModel errors)
 		{
-			Post post = _dbContext.Posts.FirstOrDefault(x => x.Id == id);
+			Post post = _dbContext.Posts.FirstOrDefault(x => x.Id == id && !x.IsDeleted);
 			if (post == null)
 			{
 				errors.Add(string.Format(ErrorResource.NotFound, "Post"));
@@ -227,7 +228,7 @@ namespace Golbaus_BE.Services.Implement
 			string userId = _userResolverService.GetUser();
 			var posts = _dbContext.Posts.Include(x => x.CommentPosts).Include(x => x.User)
 										.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
-										.Where(x => x.UserId == userId);
+										.Where(x => x.UserId == userId && !x.IsDeleted);
 			Filter(req, ref posts);
 
 			if (req.Tags != null)
@@ -239,6 +240,51 @@ namespace Golbaus_BE.Services.Implement
 			}
 
 			return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
+		}
+
+		public PaginationModel<PostListModel> GetAllByUser(string userId, PaginationPostQuestionRequest req)
+		{
+			var posts = _dbContext.Posts.Include(x => x.CommentPosts).Include(x => x.User)
+										.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
+										.Where(x => x.UserId == userId && !x.IsDeleted && x.PublishType == PublishType.Public);
+			Filter(req, ref posts);
+
+			if (req.Tags != null)
+			{
+				var result = posts.AsEnumerable();
+				req.Tags = req.Tags.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLower()).ToList();
+				result = result.Where(p => req.Tags.All(t => p.PostTagMaps.Any(m => m.Tag.Name.ToLower().Contains(t))));
+				return new PaginationModel<PostListModel>(req, result.Select(x => new PostListModel(x)));
+			}
+
+			return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
+		}
+
+		public void ToggleAddBookmark(Guid id, ErrorModel errors)
+		{
+			Post post = _dbContext.Posts.FirstOrDefault(x => x.Id == id && !x.IsDeleted);
+			if (post == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "Post"));
+			}
+			else
+			{
+				string userId = _userResolverService.GetUser();
+				var mark = _dbContext.PostBookmarks.FirstOrDefault(x => x.UserId == userId && x.PostId == id);
+				if (mark == null)
+				{
+					_dbContext.PostBookmarks.Add(new PostBookmark()
+					{
+						UserId = userId,
+						PostId = id,
+					});
+				}
+				else
+				{
+					_dbContext.PostBookmarks.Remove(mark);
+				}
+				_dbContext.SaveChanges();
+			}
 		}
 
 		#region Helper

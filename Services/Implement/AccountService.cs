@@ -52,19 +52,45 @@ namespace Golbaus_BE.Services.Implement
 		public UserGetByTokenModel GetByToken()
 		{
 			string userId = _userResolverService.GetUser();
-			var user = _dbContext.Users.Where(x => x.Id  == userId)
+			var user = _dbContext.Users.Where(x => x.Id == userId && !x.IsDeleted)
 								.Include(x => x.UserRoleMaps).ThenInclude(x => x.Role)
 								.FirstOrDefault();
-			return new UserGetByTokenModel(user);
+			if (user != null)
+			{
+				return new UserGetByTokenModel(user);
+			}
+			return new UserGetByTokenModel();
 		}
 
 		public GetDetailModel GetDetailByToken(ErrorModel errors)
 		{
-			if (ValidateUser(errors, out User user))
+			if (ValidateUser(_userResolverService.GetUser(), errors, out User user))
 			{
 				return new GetDetailModel(user);
 			}
 			return new GetDetailModel();
+		}
+
+		public GetUserProfileModel GetDetailById(string userId, ErrorModel errors)
+		{
+			string viewerId = _userResolverService.GetUser();
+
+			GetUserProfileModel user = _dbContext.Users
+				.Include(x => x.Posts).Include(x => x.Questions)
+				.Include(x => x.UserFollowerMaps)
+				.Include(x => x.UserFollowingMaps)
+				.Where(x => x.Id == userId && !x.IsDeleted)
+				.Select(x => new GetUserProfileModel(x, viewerId))
+				.FirstOrDefault();
+			if (user == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "User"));
+			}
+			else
+			{
+				return user;
+			}
+			return new GetUserProfileModel();
 		}
 
 		public void UpdateByToken(UserUpdateByTokenModel model, ErrorModel errors)
@@ -79,16 +105,38 @@ namespace Golbaus_BE.Services.Implement
 
 		public void UpdateAvatarByToken(UpdateAvatarModel model, ErrorModel errors)
 		{
-			if (ValidateUser(errors, out User user))
+			if (ValidateUser(_userResolverService.GetUser(), errors, out User user))
 			{
 				user.Avatar = model.Avatar;
 				_dbContext.SaveChanges();
 			}
 		}
 
+		public void ToggleFollow(string userId, ErrorModel errors)
+		{
+			string followerId = _userResolverService.GetUser();
+			if (ValidateFollow(followerId, userId, errors))
+			{
+				var follow = _dbContext.UserFollowMaps.FirstOrDefault(x => x.FollowerId == followerId && x.FollowingId == userId);
+				if (follow == null)
+				{
+					_dbContext.UserFollowMaps.Add(new UserFollowMap()
+					{
+						FollowerId = followerId,
+						FollowingId = userId
+					});
+				}
+				else
+				{
+					_dbContext.UserFollowMaps.Remove(follow);
+				}
+				_dbContext.SaveChanges();
+			}
+		}
+
 		#region Helper
 
-		private bool ValidateCreatUser(CreateUserModel model, ErrorModel errors) 
+		private bool ValidateCreatUser(CreateUserModel model, ErrorModel errors)
 		{
 			var user = _dbContext.Users.Where(x => x.NormalizedEmail == model.Email.ToUpper() || x.NormalizedUserName == model.UserName.ToUpper());
 			if (user != null)
@@ -112,7 +160,7 @@ namespace Golbaus_BE.Services.Implement
 
 		private bool ValidateUpdateByToken(UserUpdateByTokenModel model, ErrorModel errors, out User user)
 		{
-			if (ValidateUser(errors, out user))
+			if (ValidateUser(_userResolverService.GetUser(), errors, out user))
 			{
 				if (!string.IsNullOrEmpty(model.Password) && !string.Equals(model.Password, model.ConfirmPassword))
 				{
@@ -129,13 +177,26 @@ namespace Golbaus_BE.Services.Implement
 			return hasher.HashPassword(null, password);
 		}
 
-		private bool ValidateUser( ErrorModel errors, out User user)
+		private bool ValidateUser(string userId, ErrorModel errors, out User user)
 		{
-			user = _dbContext.Users.FirstOrDefault(x => x.Id == _userResolverService.GetUser());
+			user = _dbContext.Users.FirstOrDefault(x => x.Id == userId && !x.IsDeleted);
 			if (user == null)
 			{
 				errors.Add(string.Format(ErrorResource.NotFound, "User"));
 			}
+			return errors.IsEmpty;
+		}
+
+		private bool ValidateFollow(string followerId, string followedId, ErrorModel errors)
+		{
+			if (followerId == followedId)
+			{
+				errors.Add(string.Format(ErrorResource.Invalid, "User"));
+			}
+
+			ValidateUser(followerId, errors, out User user);
+			ValidateUser(_userResolverService.GetUser(), errors, out User following);
+
 			return errors.IsEmpty;
 		}
 

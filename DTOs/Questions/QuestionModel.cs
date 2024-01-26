@@ -64,10 +64,11 @@ namespace Golbaus_BE.DTOs.Questions
 		public int VoteCount { get; set; }
 		public DateTime? UpdatedDate { get; set; }
 		public DateTime CreatedDate { get; set; }
-		public string FullName { get; set; }
+        public string UserId { get; set; }
+        public string FullName { get; set; }
 		public string UserName { get; set; }
 		public string Avatar { get; set; }
-		public bool IsFollowed { get; set; }
+		public bool IsFollowing { get; set; }
 		public bool IsMyQuestion { get; set; }
 		public int QuestionCount { get; set; }
 		public int FollowCount { get; set; }
@@ -75,6 +76,7 @@ namespace Golbaus_BE.DTOs.Questions
 		public int ViewCount { get; set; }
 		public VoteType? Vote { get; set; }
 		public List<string> Tags { get; set; }
+		public bool IsMarked { get; set; }
 
 		public QuestionDetailModel() { }
 
@@ -84,10 +86,11 @@ namespace Golbaus_BE.DTOs.Questions
 			Title = question.Title;
 			Content = question.Content;
 			VoteCount = question.UpVote - question.DownVote;
+			UserId = question.UserId;
 			FullName = question.User.FullName;
 			UserName = question.User.UserName;
 			Avatar = question.User.Avatar;
-			IsFollowed = question.User.UserFollowerMaps.Any(x => x.FollowerId == viewerId);
+			IsFollowing = question.User.UserFollowerMaps.Any(x => x.FollowerId == viewerId);
 			IsMyQuestion = viewerId == question.UserId;
 			QuestionCount = question.User.Questions.Count;
 			FollowCount = question.User.UserFollowerMaps.Count();
@@ -98,6 +101,7 @@ namespace Golbaus_BE.DTOs.Questions
 			Tags = question.QuestionTagMaps.Select(x => x.Tag.Name).ToList();
 			CreatedDate = question.CreatedDate;
 			UpdatedDate = question.UpdatedDate;
+			IsMarked = question.QuestionBookmarks.Any(x => x.UserId == viewerId && x.QuestionId == question.Id);
 		}
 	}
 

@@ -74,11 +74,11 @@ namespace Golbaus_BE.Extentions
 				followMap.HasKey(x => new { x.FollowerId, x.FollowingId});
 				followMap.HasOne(x => x.Follower)
 						.WithMany(user  => user.UserFollowerMaps)
-						.HasForeignKey(x => x.FollowerId)
+						.HasForeignKey(x => x.FollowingId)
 						.IsRequired();
 				followMap.HasOne(x => x.Following)
 						.WithMany(user  => user.UserFollowingMaps)
-						.HasForeignKey(x => x.FollowingId)
+						.HasForeignKey(x => x.FollowerId)
 						.IsRequired();
 			});
 
@@ -166,6 +166,32 @@ namespace Golbaus_BE.Extentions
 				voteMap.HasOne(x => x.Comment)
 						.WithMany(comment => comment.CommentQuestionUserVoteMaps)
 						.HasForeignKey(x => x.CommentId)
+						.IsRequired();
+			});
+
+			builder.Entity<PostBookmark>(bookmark =>
+			{
+				bookmark.HasKey(x => new { x.UserId, x.PostId });
+				bookmark.HasOne(x => x.User)
+						.WithMany(x => x.PostBookmarks)
+						.HasForeignKey(x => x.UserId)
+						.IsRequired();
+				bookmark.HasOne(x => x.Post)
+						.WithMany(x => x.PostBookmarks)
+						.HasForeignKey(x => x.PostId)
+						.IsRequired();
+			});
+
+			builder.Entity<QuestionBookmark>(bookmark =>
+			{
+				bookmark.HasKey(x => new { x.UserId, x.QuestionId });
+				bookmark.HasOne(x => x.User)
+						.WithMany(x => x.QuestionBookmarks)
+						.HasForeignKey(x => x.UserId)
+						.IsRequired();
+				bookmark.HasOne(x => x.Question)
+						.WithMany(x => x.QuestionBookmarks)
+						.HasForeignKey(x => x.QuestionId)
 						.IsRequired();
 			});
 		}

@@ -85,10 +85,11 @@ namespace Golbaus_BE.DTOs.Posts
 		public int CountVote { get; set; }
 		public DateTime? PublishDate { get; set; }
 		public DateTime? UpdatedDate { get; set; }
-		public string FullName { get; set; }
+        public string UserId { get; set; }
+        public string FullName { get; set; }
 		public string UserName { get; set; }
 		public string Avatar { get; set; }
-		public bool IsFollowed { get; set; }
+		public bool IsFollowing { get; set; }
 		public bool IsMyPost { get; set; }
 		public int PostCount { get; set; }
 		public int FollowCount { get; set; }
@@ -98,8 +99,9 @@ namespace Golbaus_BE.DTOs.Posts
 		public PublishType PublishType { get; set; }
 		public DateTime? WillBePublishedOn { get; set; }
 		public List<string> Tags { get; set; }
+        public bool IsMarked { get; set; }
 
-		public PostDetailModel() { }
+        public PostDetailModel() { }
 
 		public PostDetailModel(Post post, string viewerId)
 		{
@@ -111,12 +113,12 @@ namespace Golbaus_BE.DTOs.Posts
 			CountVote = post.UpVote - post.DownVote;
 			PublishDate = post.PublishDate;
 			UpdatedDate = post.UpdatedDate;
+			UserId = post.User.Id;
 			FullName = post.User.FullName;
 			UserName = post.User.UserName;
 			Avatar = post.User.Avatar;
-			IsFollowed = post.User.UserFollowerMaps.Any(x => x.FollowerId == viewerId);
 			IsMyPost = viewerId == post.UserId;
-			PostCount = post.User.Posts.Count;
+			PostCount = post.User.Posts.Count(x => x.PublishType == PublishType.Public);
 			FollowCount = post.User.UserFollowerMaps.Count();
 			CommentCount = post.CommentPosts.Count(x => !x.IsDeleted);
 			ViewCount = post.ViewCount;
@@ -125,6 +127,8 @@ namespace Golbaus_BE.DTOs.Posts
 			PublishType = post.PublishType;
 			WillBePublishedOn = post.PublishType == PublishType.Schedule ? post.PublishDate : null;
 			Tags = post.PostTagMaps.Select(x => x.Tag.Name).ToList();
+			IsFollowing = post.User.UserFollowerMaps.Any(x => x.FollowerId == viewerId);
+			IsMarked = post.PostBookmarks.Any(x => x.UserId == viewerId && x.PostId == post.Id);
 		}
 	}
 

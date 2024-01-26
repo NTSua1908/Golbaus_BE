@@ -1,6 +1,5 @@
 ﻿using Golbaus_BE.Commons.Constants;
 using Golbaus_BE.Entities;
-using Newtonsoft.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
 using Role = Golbaus_BE.Commons.Constants.Role;
 
@@ -13,6 +12,8 @@ namespace Golbaus_BE.DTOs.Users
 		public string? Avatar { get; set; }
 		public string UserName { get; set; }
 		public Role Role { get; set; }
+
+		public UserGetByTokenModel() { }
 
 		public UserGetByTokenModel(User user)
 		{
@@ -83,6 +84,24 @@ namespace Golbaus_BE.DTOs.Users
 			Gender = user.Gender;
 			Bio = user.Bio;
 			Dob = user.DoB;
+		}
+	}
+
+	public class GetUserProfileModel : GetDetailModel
+	{
+        public int PostCount { get; set; }
+        public int QuestionCount { get; set; }
+        public int FollowCount { get; set; }
+		public bool IsFollowing { get; set; }
+
+		public GetUserProfileModel() { }
+
+		public GetUserProfileModel(User user, string userId) : base(user)
+		{
+			PostCount = user.Posts.Count(x => x.PublishType == PublishType.Public);
+			QuestionCount = user.Questions.Count;
+			FollowCount = user.UserFollowerMaps.Count();
+			IsFollowing = user.UserFollowerMaps.Any(x => x.FollowerId == userId);
 		}
 	}
 

@@ -57,6 +57,7 @@ namespace Golbaus_BE.Services.Implement
 										.Include(x => x.User).ThenInclude(x => x.Questions)
 										.Include(x => x.QuestionUserVoteMaps)
 										.Include(x => x.CommentQuestions)
+										.Include(x => x.QuestionBookmarks)
 										.FirstOrDefault(x => x.Id == id && !x.IsDeleted);
 			if (question == null)
 			{
@@ -188,7 +189,7 @@ namespace Golbaus_BE.Services.Implement
 
 		public PaginationModel<QuestionListModel> GetAll(PaginationPostQuestionRequest req)
 		{
-			var questions = _dbContext.Questions.Include(x => x.CommentQuestions).Include(x => x.User)
+			var questions = _dbContext.Questions.Include(x => x.CommentQuestions).Include(x => x.User).ThenInclude(x => x.UserFollowerMaps)
 										.Include(x => x.QuestionTagMaps).ThenInclude(x => x.Tag)
 										.Where(x => !x.IsDeleted);
 			Filter(req, ref questions);
@@ -207,9 +208,9 @@ namespace Golbaus_BE.Services.Implement
 		public PaginationModel<QuestionListModel> GetAllByToken(PaginationPostQuestionRequest req)
 		{
 			string userId = _userResolverService.GetUser();
-			var questions = _dbContext.Questions.Include(x => x.CommentQuestions).Include(x => x.User)
+			var questions = _dbContext.Questions.Include(x => x.CommentQuestions).Include(x => x.User).ThenInclude(x => x.UserFollowerMaps)
 										.Include(x => x.QuestionTagMaps).ThenInclude(x => x.Tag)
-										.Where(x => x.UserId == userId);
+										.Where(x => x.UserId == userId && !x.IsDeleted);
 			Filter(req, ref questions);
 
 			if (req.Tags != null)
@@ -221,6 +222,51 @@ namespace Golbaus_BE.Services.Implement
 			}
 
 			return new PaginationModel<QuestionListModel>(req, questions.Select(x => new QuestionListModel(x)));
+		}
+
+		public PaginationModel<QuestionListModel> GetAllByUser(string userId, PaginationPostQuestionRequest req)
+		{
+			var questions = _dbContext.Questions.Include(x => x.CommentQuestions).Include(x => x.User).ThenInclude(x => x.UserFollowerMaps)
+										.Include(x => x.QuestionTagMaps).ThenInclude(x => x.Tag)
+										.Where(x => x.UserId == userId && !x.IsDeleted);
+			Filter(req, ref questions);
+
+			if (req.Tags != null)
+			{
+				var result = questions.AsEnumerable();
+				req.Tags = req.Tags.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLower()).ToList();
+				result = result.Where(p => req.Tags.All(t => p.QuestionTagMaps.Any(m => m.Tag.Name.ToLower().Contains(t))));
+				return new PaginationModel<QuestionListModel>(req, result.Select(x => new QuestionListModel(x)));
+			}
+
+			return new PaginationModel<QuestionListModel>(req, questions.Select(x => new QuestionListModel(x)));
+		}
+
+		public void ToggleAddBookmark(Guid id, ErrorModel errors)
+		{
+			Question question = _dbContext.Questions.FirstOrDefault(x => x.Id == id && !x.IsDeleted);
+			if (question == null)
+			{
+				errors.Add(string.Format(ErrorResource.NotFound, "Question"));
+			}
+			else
+			{
+				string userId = _userResolverService.GetUser();
+				var mark = _dbContext.QuestionBookmarks.FirstOrDefault(x => x.UserId == userId && x.QuestionId == id);
+				if (mark == null)
+				{
+					_dbContext.QuestionBookmarks.Add(new QuestionBookmark()
+					{
+						UserId = userId,
+						QuestionId = id,
+					});
+				}
+				else
+				{
+					_dbContext.QuestionBookmarks.Remove(mark);
+				}
+				_dbContext.SaveChanges();
+			}
 		}
 
 		#region Helper

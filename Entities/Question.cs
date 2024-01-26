@@ -24,5 +24,6 @@ namespace Golbaus_BE.Entities
 		public virtual ICollection<CommentQuestion> CommentQuestions { get; set; }
 		public virtual ICollection<QuestionTagMap> QuestionTagMaps { get; set; }
 		public virtual ICollection<QuestionUserVoteMap> QuestionUserVoteMaps { get; set; }
+		public virtual ICollection<QuestionBookmark> QuestionBookmarks { get; set; }
 	}
 }
