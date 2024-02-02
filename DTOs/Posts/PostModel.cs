@@ -1,4 +1,5 @@
 ﻿using Golbaus_BE.Commons.Constants;
+using Golbaus_BE.Commons.Helper;
 using Golbaus_BE.Entities;
 using System.ComponentModel.DataAnnotations;
 
@@ -20,7 +21,7 @@ namespace Golbaus_BE.DTOs.Posts
 		public PublishType PublishType { get; set; }
 		public DateTime? WillBePublishedOn { get; set; }
 
-		public Post ParseToEntity(string userId, List<string> newTags, List<Tag> existedTags)
+		public Post ParseToEntity(User user, List<string> newTags, List<Tag> existedTags)
 		{
 			List<PostTagMap> postTags = CreatePostTagMaps(newTags, existedTags);
 
@@ -31,11 +32,11 @@ namespace Golbaus_BE.DTOs.Posts
 				Thumbnail = Thumbnail,
 				Content = Content,
 				PublishType = PublishType,
-				CreatedDate = DateTime.Now,
-				PublishDate = PublishType == PublishType.Public ? DateTime.Now : WillBePublishedOn.Value.ToLocalTime(),
+				CreatedDate = DateTimeHelper.GetVietnameTime(),
+				PublishDate = PublishType == PublishType.Public ? DateTimeHelper.GetVietnameTime() : WillBePublishedOn.Value.ToLocalTime(),
 				PostTagMaps = postTags,
 				Remark = "",
-				UserId = userId
+				User = user
 			};
 		}
 
@@ -46,9 +47,9 @@ namespace Golbaus_BE.DTOs.Posts
 			post.Thumbnail = Thumbnail;
 			post.Content = Content;
 			post.PublishType = PublishType;
-			post.UpdatedDate = DateTime.Now;
+			post.UpdatedDate = DateTimeHelper.GetVietnameTime();
 			post.PublishDate = !post.PublishDate.HasValue ?
-								(PublishType == PublishType.Public ? DateTime.Now : null) :
+								(PublishType == PublishType.Public ? DateTimeHelper.GetVietnameTime() : null) :
 								post.PublishDate;
 			post.PostTagMaps = CreatePostTagMaps(newTags, existedTags);
 			post.UpdatedBy = userId;

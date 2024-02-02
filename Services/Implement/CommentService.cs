@@ -28,6 +28,7 @@ namespace Golbaus_BE.Services.Implement
 				CommentPost newComment = model.ParseToPostCommentEntity(post, parentComment, user.Id);
 				_dbContext.CommentPosts.Add(newComment);
 				_dbContext.SaveChanges();
+				CreateNotificationCommentPost(post, newComment, parentComment);
 				return new CommentDetailModel(newComment, user);
 			}
 			return new CommentDetailModel();
@@ -63,7 +64,7 @@ namespace Golbaus_BE.Services.Implement
 			if (ValidateDeleteCommentPost(id, errors, out CommentPost comment))
 			{
 				comment.IsDeleted = true;
-				comment.UpdatedDate = DateTime.Now;
+				comment.UpdatedDate = DateTimeHelper.GetVietnameTime();
 
 				_dbContext.SaveChanges();
 			}
@@ -122,6 +123,62 @@ namespace Golbaus_BE.Services.Implement
 		}
 
 		#region Helper
+
+		private void CreateNotificationCommentPost(Post post, CommentPost comment, CommentPost parentComment)
+		{
+			List<Notification> notifications = new List<Notification>();
+			if (!comment.ParentId.HasValue)
+			{
+				Notification notification = new Notification()
+				{
+					CreatedDate = DateTimeHelper.GetVietnameTime(),
+					Content = NotificationConstant.NEW_ANSWER,
+					IsRead = false,
+					IssueId = comment.Id,
+					NotifierId = comment.UserId,
+					SubscriberId = post.UserId,
+					Type = NotificationType.AnswerQuestion,
+				};
+				if (notification.NotifierId != notification.SubscriberId)
+				{
+					notifications.Add(notification);
+				}
+			}
+			else
+			{
+				if (comment.UserId != parentComment.UserId)
+				{
+					notifications.Add(new Notification()
+					{
+						CreatedDate = DateTimeHelper.GetVietnameTime(),
+						Content = NotificationConstant.REPLY,
+						IsRead = false,
+						IssueId = comment.Id,
+						NotifierId = comment.UserId,
+						SubscriberId = parentComment.UserId,
+						Type = NotificationType.Reply,
+					});
+				}
+
+				User userReplyFor = _dbContext.Users.Where(x => x.UserName == comment.ReplyFor).FirstOrDefault();
+				if (userReplyFor.Id != parentComment.UserId && comment.UserId != userReplyFor.Id)
+				{
+					notifications.Add(new Notification()
+					{
+						CreatedDate = DateTimeHelper.GetVietnameTime(),
+						Content = NotificationConstant.REPLY,
+						IsRead = false,
+						IssueId = comment.Id,
+						NotifierId = comment.UserId,
+						SubscriberId = userReplyFor.Id,
+						Type = NotificationType.Reply,
+					});
+				}
+			}
+			_dbContext.Notifications.AddRange(notifications);
+			_dbContext.SaveChanges();
+		}
+
 		private bool ValidateCreateCommentPost(CommentCreateModel model, ErrorModel errors, out Post post, out CommentPost parentComment, out User user)
 		{
 			parentComment = null;
@@ -149,7 +206,7 @@ namespace Golbaus_BE.Services.Implement
 		private bool ValidateUpdateCommentPost(Guid id, CommentUpdateModel model, ErrorModel errors, out CommentPost comment)
 		{
 			comment = null;
-			if (ValidateUser(errors, out User user)) 
+			if (ValidateUser(errors, out User user))
 			{
 				comment = _dbContext.CommentPosts.FirstOrDefault(x => x.Id == id && x.UserId == user.Id && !x.IsDeleted);
 				if (comment == null)
@@ -189,7 +246,7 @@ namespace Golbaus_BE.Services.Implement
 			{
 				errors.Add(string.Format(ErrorResource.NotFound, "User"));
 			}
-			else 
+			else
 			{
 				comment = _dbContext.CommentPosts.FirstOrDefault(x => x.Id == id && !x.IsDeleted);
 				if (comment == null)
@@ -223,6 +280,7 @@ namespace Golbaus_BE.Services.Implement
 				CommentQuestion newComment = model.ParseToQuestionCommentEntity(question, parentComment, user.Id);
 				_dbContext.CommentQuestions.Add(newComment);
 				_dbContext.SaveChanges();
+				CreateNotificationAnswerQuestion(question, newComment, parentComment);
 				return new CommentDetailModel(newComment, user);
 			}
 			return new CommentDetailModel();
@@ -258,7 +316,7 @@ namespace Golbaus_BE.Services.Implement
 			if (ValidateDeleteCommentQuestion(id, errors, out CommentQuestion comment))
 			{
 				comment.IsDeleted = true;
-				comment.UpdatedDate = DateTime.Now;
+				comment.UpdatedDate = DateTimeHelper.GetVietnameTime();
 
 				_dbContext.SaveChanges();
 			}
@@ -317,6 +375,62 @@ namespace Golbaus_BE.Services.Implement
 		}
 
 		#region Helper
+
+		private void CreateNotificationAnswerQuestion(Question question, CommentQuestion comment, CommentQuestion parentComment)
+		{
+			List<Notification> notifications = new List<Notification>();
+			if (!comment.ParentId.HasValue)
+			{
+				Notification notification = new Notification()
+				{
+					CreatedDate = DateTimeHelper.GetVietnameTime(),
+					Content = NotificationConstant.NEW_ANSWER,
+					IsRead = false,
+					IssueId = comment.Id,
+					NotifierId = comment.UserId,
+					SubscriberId =  question.UserId,
+					Type = NotificationType.AnswerQuestion,
+				};
+				if (notification.NotifierId != notification.SubscriberId)
+				{
+					notifications.Add(notification);
+				}
+			}
+			else
+			{
+				if (comment.UserId != parentComment.UserId)
+				{
+					notifications.Add(new Notification()
+					{
+						CreatedDate = DateTimeHelper.GetVietnameTime(),
+						Content = NotificationConstant.REPLY,
+						IsRead = false,
+						IssueId = comment.Id,
+						NotifierId = comment.UserId,
+						SubscriberId = parentComment.UserId,
+						Type = NotificationType.Reply,
+					});
+				}
+
+				User userReplyFor = _dbContext.Users.Where(x => x.UserName == comment.ReplyFor).FirstOrDefault();
+				if (userReplyFor.Id != parentComment.UserId && comment.UserId != userReplyFor.Id)
+				{
+					notifications.Add(new Notification()
+					{
+						CreatedDate = DateTimeHelper.GetVietnameTime(),
+						Content = NotificationConstant.REPLY,
+						IsRead = false,
+						IssueId = comment.Id,
+						NotifierId = comment.UserId,
+						SubscriberId = userReplyFor.Id,
+						Type = NotificationType.Reply,
+					});
+				}
+			}
+			_dbContext.Notifications.AddRange(notifications);
+			_dbContext.SaveChanges();
+		}
+
 		private bool ValidateCreateCommentQuestion(CommentCreateModel model, ErrorModel errors, out Question question, out CommentQuestion parentComment, out User user)
 		{
 			parentComment = null;

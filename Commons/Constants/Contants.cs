@@ -22,4 +22,14 @@
 			" <p><a href=\"{1}\">Reset Password</a></p>    <p>If you encounter any issues, please copy and paste the link into your browser.</p> " +
 			"   <p>This link is valid for a limited time. If you don't reset your password within this period, you may need to request a new link.</p>    <p>Thank you,<br>    The Golbaus Development Team</p>  </div></body></html>";
 	}
+
+	public static class NotificationConstant
+	{
+		public const string NEW_POST = "has published a new post.";
+		public const string NEW_QUESTION = "has published a new question.";
+		public const string FOLLOWER = "is now following you. Welcome aboard!";
+		public const string NEW_COMMENT = "has left a new comment on your post.";
+		public const string NEW_ANSWER = "has left a new answer on your question.";
+		public const string REPLY = "has replied to your comment.";
+	}
 }

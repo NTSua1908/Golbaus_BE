@@ -169,5 +169,13 @@ namespace Golbaus_BE.Controllers
 			_postService.ToggleAddBookmark(postId, errors);
 			return errors.IsEmpty ? Ok() : BadRequest(errors);
 		}
+
+		[HttpGet("GetAllBookmarkByToken")]
+		public IActionResult GetAllBookmarkByToken(PaginationPostQuestionRequest req)
+		{
+			req.Format();
+			var posts = _postService.GetAllBookmarkByToken(req);
+			return Ok(posts);
+		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using Golbaus_BE.Commons.Constants;
+using Golbaus_BE.Commons.Helper;
 using Golbaus_BE.Entities;
 using Golbaus_BE.Entities.BaseEntity;
 
@@ -15,10 +16,10 @@ namespace Golbaus_BE.DTOs.Comments
 		{
 			return new CommentPost
 			{
-				Content = Content,
+				Content = Content.StartsWith("`") ? "\n" + Content : Content,
 				ParentId = parent?.Id,
 				PostId = post.Id,
-				CreatedDate = DateTime.Now,
+				CreatedDate = DateTimeHelper.GetVietnameTime(),
 				Remark = "",
 				ReplyFor = ReplyFor,
 				UserId = userId
@@ -29,10 +30,10 @@ namespace Golbaus_BE.DTOs.Comments
 		{
 			return new CommentQuestion
 			{
-				Content = Content,
+				Content = Content.StartsWith("`") ? "\n" + Content : Content,
 				ParentId = parent?.Id,
 				QuestionId = question.Id,
-				CreatedDate = DateTime.Now,
+				CreatedDate = DateTimeHelper.GetVietnameTime(),
 				Remark = "",
 				ReplyFor = ReplyFor,
 				UserId = userId
@@ -46,14 +47,15 @@ namespace Golbaus_BE.DTOs.Comments
 
 		public void UpdateEntity(Comment comment)
 		{
-			comment.Content = Content;
+			comment.Content = Content.StartsWith("`") ? "\n" + Content : Content;
 		}
     }
 
 	public class CommentDetailModel
 	{
 		public Guid Id { get; set; }
-		public string Avatar { get; set; }
+        public string UserId { get; set; }
+        public string Avatar { get; set; }
 		public string FullName { get; set; }
 		public string UserName { get; set; }
 		public string Content { get; set; }
@@ -72,6 +74,7 @@ namespace Golbaus_BE.DTOs.Comments
         public CommentDetailModel(Comment comment, User user)
 		{
 			Id = comment.Id;
+			UserId = user.Id;
 			Avatar = user.Avatar;
 			FullName = user.FullName;
 			UserName = user.UserName;
@@ -91,6 +94,7 @@ namespace Golbaus_BE.DTOs.Comments
 		public CommentDetailModel(CommentPost comment, string userId, bool isChild)
 		{
 			Id = comment.Id;
+			UserId = comment.UserId;
 			Avatar = comment.User.Avatar;
 			FullName = comment.User.FullName;
 			UserName = comment.User.UserName;
@@ -110,6 +114,7 @@ namespace Golbaus_BE.DTOs.Comments
 		public CommentDetailModel(CommentQuestion comment, string userId, bool isChild)
 		{
 			Id = comment.Id;
+			userId = comment.UserId;
 			Avatar = comment.User.Avatar;
 			FullName = comment.User.FullName;
 			UserName = comment.User.UserName;

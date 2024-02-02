@@ -43,6 +43,7 @@ namespace Golbaus_BE.Extentions
 			services.AddScoped<IQuestionService, QuestionService>();
 			services.AddScoped<ITagService, TagService>();
 			services.AddScoped<IEmailService, EmailService>();
+			services.AddScoped<INotificationService, NotificationService>();
 			services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 			services.AddScoped<UserResolverService>();
 

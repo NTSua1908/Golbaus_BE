@@ -43,5 +43,6 @@ namespace Golbaus_BE.Entities
 		public DbSet<CommentQuestion> CommentQuestions { get; set; }
 		public DbSet<PostBookmark> PostBookmarks { get; set; }
 		public DbSet<QuestionBookmark> QuestionBookmarks { get; set; }
+		public DbSet<Notification> Notifications { get; set; }
 	}
 }

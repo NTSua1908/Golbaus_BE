@@ -97,6 +97,15 @@ namespace Golbaus_BE.Commons.ErrorLocalization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Incorrect {0}.
+        /// </summary>
+        public static string Incorrect {
+            get {
+                return ResourceManager.GetString("Incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} invalid..
         /// </summary>
         public static string Invalid {

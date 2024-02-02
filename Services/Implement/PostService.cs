@@ -30,15 +30,20 @@ namespace Golbaus_BE.Services.Implement
 			if (ValidateCreatePost(userId, model, errors, out User user))
 			{
 				var newTags = GetTagNotExist(model.Tags, out List<Tag> existedTags);
-				Post post = model.ParseToEntity(userId, newTags, existedTags);
+				Post post = model.ParseToEntity(user, newTags, existedTags);
 
 				_dbContext.Posts.Add(post);
+				_dbContext.SaveChanges();
+
 				if (model.PublishType == PublishType.Schedule)
 				{
-					BackgroundJob.Schedule<IPostService>(x => x.PublishTask(post.Id), (post.PublishDate - DateTime.Now).Value);
+					BackgroundJob.Schedule<IPostService>(x => x.PublishTask(post.Id), (post.PublishDate - DateTimeHelper.GetVietnameTime()).Value);
+				}
+				else if (model.PublishType == PublishType.Public)
+				{
+					CreateNotificationNewPost(post);
 				}
 
-				_dbContext.SaveChanges();
 				return post.Id;
 			}
 			return new Guid();
@@ -72,7 +77,7 @@ namespace Golbaus_BE.Services.Implement
 			}
 			else
 			{
-				_httpContextAccessor.HttpContext.Session.SetString("Time", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+				_httpContextAccessor.HttpContext.Session.SetString("Time", DateTimeHelper.GetVietnameTime().ToString("yyyy-MM-dd HH:mm:ss"));
 				_httpContextAccessor.HttpContext.Session.SetString("PostId", id.ToString());
 				Console.WriteLine(_httpContextAccessor.HttpContext.Session.Id);
 				return new PostDetailModel(post, userId);
@@ -86,7 +91,7 @@ namespace Golbaus_BE.Services.Implement
 			{
 				post.IsDeleted = true;
 				post.UpdatedBy = user.Id;
-				post.UpdatedDate = DateTime.Now;
+				post.UpdatedDate = DateTimeHelper.GetVietnameTime();
 				_dbContext.SaveChanges();
 			}
 		}
@@ -98,7 +103,7 @@ namespace Golbaus_BE.Services.Implement
 				post.IsDeleted = true;
 				post.Remark = remark;
 				post.UpdatedBy = user.Id;
-				post.UpdatedDate = DateTime.Now;
+				post.UpdatedDate = DateTimeHelper.GetVietnameTime();
 				_dbContext.SaveChanges();
 			}
 		}
@@ -109,7 +114,7 @@ namespace Golbaus_BE.Services.Implement
 			{
 				post.IsDeleted = false;
 				post.UpdatedBy = user.Id;
-				post.UpdatedDate = DateTime.Now;
+				post.UpdatedDate = DateTimeHelper.GetVietnameTime();
 				_dbContext.SaveChanges();
 			}
 		}
@@ -168,11 +173,14 @@ namespace Golbaus_BE.Services.Implement
 
 		public void PublishTask(Guid id)
 		{
-			Post post = _dbContext.Posts.FirstOrDefault(x => x.Id == id);
+			Post post = _dbContext.Posts.Include(x => x.User).ThenInclude(x => x.UserFollowerMaps).FirstOrDefault(x => x.Id == id);
 			if (post != null)
 			{
-				post.PublishDate = DateTime.Now;
+				post.PublishDate = DateTimeHelper.GetVietnameTime();
 				post.PublishType = PublishType.Public;
+
+				CreateNotificationNewPost(post);
+
 				_dbContext.SaveChanges();
 			}
 		}
@@ -191,7 +199,7 @@ namespace Golbaus_BE.Services.Implement
 				Console.WriteLine(_httpContextAccessor.HttpContext.Session.Id);
 				if (timeGet != null && postId != null &&
 					Guid.TryParse(postId, out Guid PostId) && DateTime.TryParse(timeGet, out DateTime TimeGet) &&
-					id == PostId && (DateTime.Now - TimeGet).TotalSeconds > 10)
+					id == PostId && (DateTimeHelper.GetVietnameTime() - TimeGet).TotalSeconds > 10)
 				{
 					post.ViewCount++;
 					_dbContext.SaveChanges();
@@ -262,7 +270,7 @@ namespace Golbaus_BE.Services.Implement
 
 		public void ToggleAddBookmark(Guid id, ErrorModel errors)
 		{
-			Post post = _dbContext.Posts.FirstOrDefault(x => x.Id == id && !x.IsDeleted);
+			Post post = _dbContext.Posts.FirstOrDefault(x => x.Id == id && !x.IsDeleted && x.PublishType == PublishType.Public);
 			if (post == null)
 			{
 				errors.Add(string.Format(ErrorResource.NotFound, "Post"));
@@ -277,6 +285,7 @@ namespace Golbaus_BE.Services.Implement
 					{
 						UserId = userId,
 						PostId = id,
+						MarkedDate = DateTimeHelper.GetVietnameTime()
 					});
 				}
 				else
@@ -287,7 +296,52 @@ namespace Golbaus_BE.Services.Implement
 			}
 		}
 
+		public PaginationModel<PostListModel> GetAllBookmarkByToken(PaginationPostQuestionRequest req)
+		{
+			string userId = _userResolverService.GetUser();
+			var posts = _dbContext.PostBookmarks
+				.Include(x => x.Post).ThenInclude(x => x.CommentPosts)
+				.Include(x => x.Post).ThenInclude(x => x.PostTagMaps).ThenInclude(x => x.Tag)
+				.Include(x => x.Post).ThenInclude(x => x.User)
+				.Where(x => x.UserId == userId && !x.Post.IsDeleted && x.Post.PublishType == PublishType.Public)
+				.OrderByDescending(x => x.MarkedDate)
+				.Select(x => x.Post);
+
+			Filter(req, ref posts);
+
+			if (req.Tags != null)
+			{
+				var result = posts.AsEnumerable();
+				req.Tags = req.Tags.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLower()).ToList();
+				result = result.Where(p => req.Tags.All(t => p.PostTagMaps.Any(m => m.Tag.Name.ToLower().Contains(t))));
+				return new PaginationModel<PostListModel>(req, result.Select(x => new PostListModel(x)));
+			}
+
+			return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
+		}
+
 		#region Helper
+
+		private void CreateNotificationNewPost(Post post)
+		{
+			List<Notification> notifications = new List<Notification>();
+			foreach (var userFollow in post.User.UserFollowerMaps)
+			{
+				Notification notification = new Notification()
+				{
+					CreatedDate = DateTimeHelper.GetVietnameTime(),
+					Content = NotificationConstant.NEW_POST,
+					IsRead = false,
+					IssueId = post.Id,
+					NotifierId = post.User.Id,
+					SubscriberId = userFollow.FollowerId,
+					Type = NotificationType.NewPost,
+				};
+				notifications.Add(notification);
+			}
+			_dbContext.Notifications.AddRange(notifications);
+			_dbContext.SaveChanges();
+		}
 
 		private void Filter(PaginationPostQuestionRequest req, ref IQueryable<Post> data)
 		{
@@ -319,11 +373,18 @@ namespace Golbaus_BE.Services.Implement
 						break;
 				}
 			}
+			else
+			{
+				data = data.OrderByDescending(x => x.PublishDate);
+			}
 		}
 
 		private bool ValidateCreatePost(string userId, PostCreateModel model, ErrorModel errors, out User user)
 		{
-			user = _dbContext.Users.Find(userId);
+			user = _dbContext.Users.Where(x => x.Id == userId)
+									.Include(x => x.UserFollowerMaps)
+									.FirstOrDefault();
+
 			if (user == null || user.IsDeleted)
 			{
 				errors.Add(string.Format(ErrorResource.NotFound, "User"));
@@ -346,7 +407,7 @@ namespace Golbaus_BE.Services.Implement
 				{
 					errors.Add(string.Format(ErrorResource.LengthRequired, "post content", "50"));
 				}
-				if (model.PublishType == PublishType.Schedule && (model.WillBePublishedOn - DateTime.UtcNow).Value.TotalMinutes < 30)
+				if (model.PublishType == PublishType.Schedule && (!model.WillBePublishedOn.HasValue || (DateTimeHelper.ConvertVietnameTime(model.WillBePublishedOn.Value) - DateTimeHelper.GetVietnameTime()).TotalMinutes < 30))
 				{
 					errors.Add(ErrorResource.PublishTime);
 				}

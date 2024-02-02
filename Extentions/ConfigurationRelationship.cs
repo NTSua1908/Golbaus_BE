@@ -194,6 +194,18 @@ namespace Golbaus_BE.Extentions
 						.HasForeignKey(x => x.QuestionId)
 						.IsRequired();
 			});
+
+			builder.Entity<Notification>(notify =>
+			{
+				notify.HasOne(x => x.Subscriber)
+						.WithMany(x => x.Notifications)
+						.HasForeignKey(x => x.SubscriberId)
+						.IsRequired();
+				notify.HasOne(x => x.Notifier)
+						.WithMany(x => x.NotificationInvolves)
+						.HasForeignKey(x => x.NotifierId)
+						.IsRequired();
+			});
 		}
 	}
 }

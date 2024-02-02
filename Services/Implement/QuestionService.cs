@@ -6,6 +6,7 @@ using Golbaus_BE.DTOs.Questions;
 using Golbaus_BE.Entities;
 using Golbaus_BE.Services.Interface;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace Golbaus_BE.Services.Implement
 {
@@ -28,10 +29,13 @@ namespace Golbaus_BE.Services.Implement
 			if (ValidateCreateQuestion(userId, model, errors, out User user))
 			{
 				var newTags = GetTagNotExist(model.Tags, out List<Tag> existedTags);
-				Question question = model.ParseToEntity(userId, newTags, existedTags);
+				Question question = model.ParseToEntity(user, newTags, existedTags);
 
 				_dbContext.Questions.Add(question);
 				_dbContext.SaveChanges();
+
+				CreateNotificationNewQuestion(question);
+
 				return question.Id;
 			}
 			return new Guid();
@@ -65,7 +69,7 @@ namespace Golbaus_BE.Services.Implement
 			}
 			else
 			{
-				_httpContextAccessor.HttpContext.Session.SetString("Time", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+				_httpContextAccessor.HttpContext.Session.SetString("Time", DateTimeHelper.GetVietnameTime().ToString("yyyy-MM-dd HH:mm:ss"));
 				_httpContextAccessor.HttpContext.Session.SetString("QuestionId", id.ToString());
 				Console.WriteLine(_httpContextAccessor.HttpContext.Session.Id);
 				return new QuestionDetailModel(question, userId);
@@ -79,7 +83,7 @@ namespace Golbaus_BE.Services.Implement
 			{
 				question.IsDeleted = true;
 				question.UpdatedBy = user.Id;
-				question.UpdatedDate = DateTime.Now;
+				question.UpdatedDate = DateTimeHelper.GetVietnameTime();
 				_dbContext.SaveChanges();
 			}
 		}
@@ -91,7 +95,7 @@ namespace Golbaus_BE.Services.Implement
 				question.IsDeleted = true;
 				question.Remark = remark;
 				question.UpdatedBy = user.Id;
-				question.UpdatedDate = DateTime.Now;
+				question.UpdatedDate = DateTimeHelper.GetVietnameTime();
 				_dbContext.SaveChanges();
 			}
 		}
@@ -102,7 +106,7 @@ namespace Golbaus_BE.Services.Implement
 			{
 				question.IsDeleted = false;
 				question.UpdatedBy = user.Id;
-				question.UpdatedDate = DateTime.Now;
+				question.UpdatedDate = DateTimeHelper.GetVietnameTime();
 				_dbContext.SaveChanges();
 			}
 		}
@@ -173,7 +177,7 @@ namespace Golbaus_BE.Services.Implement
 
 				if (timeGet != null && questionId != null &&
 					Guid.TryParse(questionId, out Guid QuestionId) && DateTime.TryParse(timeGet, out DateTime TimeGet) &&
-					id == QuestionId && (DateTime.Now - TimeGet).TotalSeconds > 10)
+					id == QuestionId && (DateTimeHelper.GetVietnameTime() - TimeGet).TotalSeconds > 10)
 				{
 					question.ViewCount++;
 					_dbContext.SaveChanges();
@@ -259,6 +263,7 @@ namespace Golbaus_BE.Services.Implement
 					{
 						UserId = userId,
 						QuestionId = id,
+						MarkedDate = DateTimeHelper.GetVietnameTime()
 					});
 				}
 				else
@@ -269,7 +274,52 @@ namespace Golbaus_BE.Services.Implement
 			}
 		}
 
+		public PaginationModel<QuestionListModel> GetAllBookmarkByToken(PaginationPostQuestionRequest req)
+		{
+			string userId = _userResolverService.GetUser();
+			var questions = _dbContext.QuestionBookmarks
+				.Include(x => x.Question).ThenInclude(x => x.CommentQuestions)
+				.Include(x => x.Question).ThenInclude(x => x.QuestionTagMaps).ThenInclude(x => x.Tag)
+				.Include(x => x.Question).ThenInclude(x => x.User).ThenInclude(x => x.UserFollowerMaps)
+				.Where(x => x.UserId == userId && !x.Question.IsDeleted)
+				.OrderByDescending(x => x.MarkedDate)
+				.Select(x => x.Question);
+
+			Filter(req, ref questions);
+
+			if (req.Tags != null)
+			{
+				var result = questions.AsEnumerable();
+				req.Tags = req.Tags.Where(x => !string.IsNullOrEmpty(x)).Select(x => x.ToLower()).ToList();
+				result = result.Where(p => req.Tags.All(t => p.QuestionTagMaps.Any(m => m.Tag.Name.ToLower().Contains(t))));
+				return new PaginationModel<QuestionListModel>(req, result.Select(x => new QuestionListModel(x)));
+			}
+
+			return new PaginationModel<QuestionListModel>(req, questions.Select(x => new QuestionListModel(x)));
+		}
+
 		#region Helper
+
+		private void CreateNotificationNewQuestion(Question question)
+		{
+			List<Notification> notifications = new List<Notification>();
+			foreach (var userFollow in question.User.UserFollowerMaps)
+			{
+				Notification notification = new Notification()
+				{
+					CreatedDate = DateTimeHelper.GetVietnameTime(),
+					Content = NotificationConstant.NEW_QUESTION,
+					IsRead = false,
+					IssueId = question.Id,
+					NotifierId = question.User.Id,
+					SubscriberId = userFollow.FollowerId,
+					Type = NotificationType.NewQuestion,
+				};
+				notifications.Add(notification);
+			}
+			_dbContext.Notifications.AddRange(notifications);
+			_dbContext.SaveChanges();
+		}
 
 		private void Filter(PaginationPostQuestionRequest req, ref IQueryable<Question> data)
 		{
@@ -305,7 +355,7 @@ namespace Golbaus_BE.Services.Implement
 
 		private bool ValidateCreateQuestion(string userId, QuestionCreateUpdateModel model, ErrorModel errors, out User user)
 		{
-			user = _dbContext.Users.Find(userId);
+			user = _dbContext.Users.Where(x => x.Id == userId).Include(x => x.UserFollowerMaps).FirstOrDefault();
 			if (user == null || user.IsDeleted)
 			{
 				errors.Add(string.Format(ErrorResource.NotFound, "User"));

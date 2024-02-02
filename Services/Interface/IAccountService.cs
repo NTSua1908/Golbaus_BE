@@ -9,7 +9,7 @@ namespace Golbaus_BE.Services.Interface
 		UserGetByTokenModel GetByToken();
 		GetDetailModel GetDetailByToken(ErrorModel errors);
 		GetUserProfileModel GetDetailById(string userId, ErrorModel errors);
-		void UpdateByToken(UserUpdateByTokenModel model, ErrorModel errors);
+		Task UpdateByToken(UserUpdateByTokenModel model, ErrorModel errors);
 		void UpdateAvatarByToken(UpdateAvatarModel model, ErrorModel errors);
 		void ToggleFollow(string userId, ErrorModel errors);
 	}

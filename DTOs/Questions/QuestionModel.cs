@@ -1,4 +1,5 @@
 ﻿using Golbaus_BE.Commons.Constants;
+using Golbaus_BE.Commons.Helper;
 using Golbaus_BE.Entities;
 using System.ComponentModel.DataAnnotations;
 
@@ -13,7 +14,7 @@ namespace Golbaus_BE.DTOs.Questions
 		[Required(ErrorMessage = "Tags is required")]
 		public List<string> Tags { get; set; }
 
-		public Question ParseToEntity(string userId, List<string> newTags, List<Tag> existedTags)
+		public Question ParseToEntity(User user, List<string> newTags, List<Tag> existedTags)
 		{
 			List<QuestionTagMap> questionTags = CreateQuestionTagMaps(newTags, existedTags);
 			return new Question
@@ -21,8 +22,8 @@ namespace Golbaus_BE.DTOs.Questions
 				Title = Title,
 				Content = Content,
 				QuestionTagMaps = questionTags,
-				CreatedDate = DateTime.Now,
-				UserId = userId,
+				CreatedDate = DateTimeHelper.GetVietnameTime(),
+				User = user,
 			};
 		}
 
@@ -30,7 +31,7 @@ namespace Golbaus_BE.DTOs.Questions
 		{
 			question.Title = Title;
 			question.Content = Content;
-			question.UpdatedDate = DateTime.Now;
+			question.UpdatedDate = DateTimeHelper.GetVietnameTime();
 			question.QuestionTagMaps = CreateQuestionTagMaps(newTags, existedTags);
 			question.UpdatedBy = userId;
 		}

@@ -1,4 +1,5 @@
 ﻿using Golbaus_BE.Commons.Constants;
+using Golbaus_BE.Commons.Helper;
 using Golbaus_BE.Entities;
 using System.ComponentModel.DataAnnotations;
 using Role = Golbaus_BE.Commons.Constants.Role;
@@ -53,7 +54,7 @@ namespace Golbaus_BE.DTOs.Users
 				FullName = FullName,
 				UserName = UserName,
 				Email = Email,
-				DateJoined = DateTime.Now,
+				DateJoined = DateTimeHelper.GetVietnameTime(),
 				EmailConfirmed = false,
 				PasswordHash = password,
 				NormalizedUserName = Email.ToUpper()
@@ -113,7 +114,7 @@ namespace Golbaus_BE.DTOs.Users
 		public DateTime? Dob { get; set; }
 		public Gender Gender { get; set; }
 		public string Bio { get; set; }
-
+		public string OldPassword { get; set; }
 		[RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$", ErrorMessage = "Invalid password")]
 		public string Password { get; set; }
 		public string ConfirmPassword { get; set; }

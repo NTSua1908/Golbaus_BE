@@ -27,5 +27,7 @@ namespace Golbaus_BE.Entities
 		public virtual ICollection<UserFollowMap> UserFollowingMaps{ get; set; }
 		public virtual ICollection<PostBookmark> PostBookmarks { get; set; }
 		public virtual ICollection<QuestionBookmark> QuestionBookmarks { get; set; }
+		public virtual ICollection<Notification> Notifications { get; set; }
+		public virtual ICollection<Notification> NotificationInvolves { get; set; }
 	}
 }

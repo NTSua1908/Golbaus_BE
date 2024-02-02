@@ -8,6 +8,7 @@ using Golbaus_BE.Services.Interface;
 using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Principal;
 using Role = Golbaus_BE.Commons.Constants.Role;
 
 namespace Golbaus_BE.Services.Implement
@@ -18,13 +19,15 @@ namespace Golbaus_BE.Services.Implement
 		private readonly ApiDbContext _dbContext;
 		private readonly UserResolverService _userResolverService;
 		private readonly IEmailService _emailService;
+		private readonly SignInManager<User> _signInManager;
 
-		public AccountService(UserManager<User> userManager, ApiDbContext dbContext, UserResolverService userResolverService, IEmailService emailService)
+		public AccountService(UserManager<User> userManager, ApiDbContext dbContext, UserResolverService userResolverService, IEmailService emailService, SignInManager<User> signInManager)
 		{
 			_userManager = userManager;
 			_dbContext = dbContext;
 			_userResolverService = userResolverService;
 			_emailService = emailService;
+			_signInManager = signInManager;
 		}
 
 		public async Task<ErrorModel> CreateUser(CreateUserModel model)
@@ -93,13 +96,21 @@ namespace Golbaus_BE.Services.Implement
 			return new GetUserProfileModel();
 		}
 
-		public void UpdateByToken(UserUpdateByTokenModel model, ErrorModel errors)
+		public async Task UpdateByToken(UserUpdateByTokenModel model, ErrorModel errors)
 		{
 			if (ValidateUpdateByToken(model, errors, out User user))
 			{
-				string password = string.IsNullOrEmpty(model.Password) ? "" : HashPassword(model.Password);
-				model.UpdateEntity(user, password);
-				_dbContext.SaveChanges();
+				var result = string.IsNullOrEmpty(model.Password) ? true : _signInManager.PasswordSignInAsync(user.UserName, model.OldPassword, false, false).Result.Succeeded;
+				if (result)
+				{
+					string password = string.IsNullOrEmpty(model.Password) ? "" : HashPassword(model.Password);
+					model.UpdateEntity(user, password);
+					_dbContext.SaveChanges();
+				}
+				else
+				{
+					errors.Add(string.Format(ErrorResource.Incorrect, "Password"));
+				}
 			}
 		}
 
@@ -125,6 +136,7 @@ namespace Golbaus_BE.Services.Implement
 						FollowerId = followerId,
 						FollowingId = userId
 					});
+					CreateNotificationNewFollower(followerId, userId);
 				}
 				else
 				{
@@ -135,6 +147,21 @@ namespace Golbaus_BE.Services.Implement
 		}
 
 		#region Helper
+
+		private void CreateNotificationNewFollower(string followerId, string FollowingId)
+		{
+			Notification notification = new Notification()
+			{
+				CreatedDate = DateTimeHelper.GetVietnameTime(),
+				Content = NotificationConstant.FOLLOWER,
+				IsRead = false,
+				IssueId = Guid.Parse(followerId),
+				NotifierId = followerId,
+				SubscriberId = FollowingId,
+				Type = NotificationType.Follow,
+			};
+			_dbContext.Notifications.Add(notification);
+		}
 
 		private bool ValidateCreatUser(CreateUserModel model, ErrorModel errors)
 		{
@@ -165,6 +192,10 @@ namespace Golbaus_BE.Services.Implement
 				if (!string.IsNullOrEmpty(model.Password) && !string.Equals(model.Password, model.ConfirmPassword))
 				{
 					errors.Add(ErrorResource.PasswordNotMatch);
+				}
+				if ((!string.IsNullOrEmpty(model.Password) || !string.IsNullOrEmpty(model.ConfirmPassword)) && string.IsNullOrEmpty(model.OldPassword))
+				{
+					errors.Add(string.Format(ErrorResource.MissingRequired, "Old password"));
 				}
 			}
 

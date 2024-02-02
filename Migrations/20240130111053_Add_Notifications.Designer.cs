@@ -3,6 +3,7 @@ using System;
 using Golbaus_BE.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Golbaus_BE.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    partial class ApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240130111053_Add_Notifications")]
+    partial class Add_Notifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -262,9 +265,6 @@ namespace Golbaus_BE.Migrations
                     b.Property<Guid>("PostId")
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime>("MarkedDate")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("UserId", "PostId");
 
                     b.HasIndex("PostId");
@@ -359,9 +359,6 @@ namespace Golbaus_BE.Migrations
 
                     b.Property<Guid>("QuestionId")
                         .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("MarkedDate")
-                        .HasColumnType("datetime(6)");
 
                     b.HasKey("UserId", "QuestionId");
 
@@ -571,7 +568,7 @@ namespace Golbaus_BE.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@GMAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAELiwKqbsIqInBxrM2ur0MObui6RtaDafdnoGNyV/lIpqT9UQM8Q1Oi0KhRksPWtQlg==",
+                            PasswordHash = "AQAAAAEAACcQAAAAELzvepJLwb2+EnEBybduKMAEVkHz0Tzdu5Q1ldoeNdExgbY7ovSkX5Q7JS3BQsOdOA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "",
                             TwoFactorEnabled = false,
@@ -591,7 +588,7 @@ namespace Golbaus_BE.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEHHd813TmvTpftDcMDWxN/4ziDhKmfjG9753HXUjf1ter0hBrD4XxQIYu5GeKZmtww==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEKAFrE56lz7r4NrZmII3F4hJtua/Gp+ZFmRwXM2gt71C+simMPQd0riLBtmhP+lyhA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "",
                             TwoFactorEnabled = false,

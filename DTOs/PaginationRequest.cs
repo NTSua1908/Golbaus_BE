@@ -41,4 +41,13 @@ namespace Golbaus_BE.DTOs
         public OrderBy? OrderBy { get; set; }
         public OrderType? OrderType { get; set; }
     }
+
+	public class PaginationNotificationRequest : PaginationRequest
+	{
+		public DateTime? NotificationDateFrom { get; set; }
+		public DateTime? NotificationDateTo { get; set; }
+        public List<NotificationType> Types { get; set; }
+        public bool UnRead { get; set; }
+        public OrderType? OrderType { get; set; }
+	}
 }

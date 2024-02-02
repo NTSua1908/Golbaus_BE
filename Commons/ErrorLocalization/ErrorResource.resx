@@ -129,6 +129,9 @@
   <data name="EmailVerificationSuccessful" xml:space="preserve">
     <value>Email verification successful</value>
   </data>
+  <data name="Incorrect" xml:space="preserve">
+    <value>Incorrect {0}</value>
+  </data>
   <data name="Invalid" xml:space="preserve">
     <value>{0} invalid.</value>
   </data>

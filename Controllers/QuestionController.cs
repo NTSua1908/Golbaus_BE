@@ -1,6 +1,7 @@
 ﻿using Golbaus_BE.Commons.Constants;
 using Golbaus_BE.DTOs;
 using Golbaus_BE.DTOs.Questions;
+using Golbaus_BE.Services.Implement;
 using Golbaus_BE.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -168,6 +169,14 @@ namespace Golbaus_BE.Controllers
 			ErrorModel errors = new ErrorModel();
 			_questionService.ToggleAddBookmark(questionId, errors);
 			return errors.IsEmpty ? Ok() : BadRequest(errors);
+		}
+
+		[HttpGet("GetAllBookmarkByToken")]
+		public IActionResult GetAllBookmarkByToken(PaginationPostQuestionRequest req)
+		{
+			req.Format();
+			var posts = _questionService.GetAllBookmarkByToken(req);
+			return Ok(posts);
 		}
 	}
 }
