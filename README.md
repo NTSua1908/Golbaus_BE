@@ -13,7 +13,7 @@ Link website [ntsua.id.vn](http://ntsua.id.vn)
   
 ## Technologies Used
 - **Frontend:**
-  - HTML, CSS, TypeScript
+  - HTML, SCSS, TypeScript
   - React.js: For building the user interface and components
   - Ant Design: UI library for React components
 - **Backend:**
