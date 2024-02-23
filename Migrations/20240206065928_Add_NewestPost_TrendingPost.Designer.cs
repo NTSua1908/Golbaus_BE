@@ -3,6 +3,7 @@ using System;
 using Golbaus_BE.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Golbaus_BE.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    partial class ApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240206065928_Add_NewestPost_TrendingPost")]
+    partial class Add_NewestPost_TrendingPost
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -175,26 +178,6 @@ namespace Golbaus_BE.Migrations
                         .IsUnique();
 
                     b.ToTable("NewestPosts");
-                });
-
-            modelBuilder.Entity("Golbaus_BE.Entities.NewestQuestion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("QuestionId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestionId")
-                        .IsUnique();
-
-                    b.ToTable("NewestQuestions");
                 });
 
             modelBuilder.Entity("Golbaus_BE.Entities.Notification", b =>
@@ -594,9 +577,6 @@ namespace Golbaus_BE.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<string>("RecentlyViewedTags")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("longtext");
 
@@ -636,9 +616,8 @@ namespace Golbaus_BE.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@GMAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEPSaStPLfCRAT/mn34uNEIcC1C8KcBmtzSQZVkrBb2eSPp6ODc2TmJWpLr13AYCHlA==",
+                            PasswordHash = "AQAAAAEAACcQAAAAENWFYTZkEiyAYgdWwsHu53HaKk7qqVmNpk3fmf4rSJLm7sHPfXQaxf3DCT/dHOKDww==",
                             PhoneNumberConfirmed = false,
-                            RecentlyViewedTags = "",
                             SecurityStamp = "",
                             TwoFactorEnabled = false,
                             UserName = "admin"
@@ -657,9 +636,8 @@ namespace Golbaus_BE.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEEOXOksVV6Tehg9lXoAK5+sUxPYRamIK2EHbY2tOsjqeKBmvXuvKUvO1mi00eTA9FQ==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEFSBscnbF1Yn6d7Cj+7aiXJJJLYhqkWma/UkrrB+4REaOMqJy+aWQ0LkR7jcbRZMGA==",
                             PhoneNumberConfirmed = false,
-                            RecentlyViewedTags = "",
                             SecurityStamp = "",
                             TwoFactorEnabled = false,
                             UserName = "superadmin"
@@ -894,17 +872,6 @@ namespace Golbaus_BE.Migrations
                         .IsRequired();
 
                     b.Navigation("Post");
-                });
-
-            modelBuilder.Entity("Golbaus_BE.Entities.NewestQuestion", b =>
-                {
-                    b.HasOne("Golbaus_BE.Entities.Question", "Question")
-                        .WithOne("NewestQuestion")
-                        .HasForeignKey("Golbaus_BE.Entities.NewestQuestion", "QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Question");
                 });
 
             modelBuilder.Entity("Golbaus_BE.Entities.Notification", b =>
@@ -1179,8 +1146,6 @@ namespace Golbaus_BE.Migrations
             modelBuilder.Entity("Golbaus_BE.Entities.Question", b =>
                 {
                     b.Navigation("CommentQuestions");
-
-                    b.Navigation("NewestQuestion");
 
                     b.Navigation("QuestionBookmarks");
 

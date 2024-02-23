@@ -2,6 +2,7 @@
 using Golbaus_BE.Commons.ErrorLocalization;
 using Golbaus_BE.Commons.Helper;
 using Golbaus_BE.DTOs;
+using Golbaus_BE.DTOs.Posts;
 using Golbaus_BE.DTOs.Questions;
 using Golbaus_BE.Entities;
 using Golbaus_BE.Services.Interface;
@@ -35,6 +36,7 @@ namespace Golbaus_BE.Services.Implement
 				_dbContext.SaveChanges();
 
 				CreateNotificationNewQuestion(question);
+				AddNewestQuestion(question);
 
 				return question.Id;
 			}
@@ -298,6 +300,80 @@ namespace Golbaus_BE.Services.Implement
 			return new PaginationModel<QuestionListModel>(req, questions.Select(x => new QuestionListModel(x)));
 		}
 
+		public PaginationModel<QuestionListModel> GetRelatedQuestions(Guid questionId, List<string> tags, PaginationRequest req)
+		{
+			tags = tags.Select(x => x.ToLower()).ToList();
+			var questions = _dbContext.Questions.Include(x => x.CommentQuestions)
+										.Include(x => x.User).ThenInclude(x => x.UserFollowerMaps)
+										.Include(x => x.QuestionTagMaps).ThenInclude(x => x.Tag)
+										.Where(x => !x.IsDeleted && x.Id != questionId && x.QuestionTagMaps.Any(x => tags.Contains(x.Tag.Name.ToLower())))
+										.OrderByDescending(x => x.ViewCount);
+			return new PaginationModel<QuestionListModel>(req, questions.Select(x => new QuestionListModel(x)));
+		}
+
+		public PaginationModel<QuestionListModel> GetNewestQuestions(PaginationRequest req)
+		{
+			var newestQuestions = _dbContext.NewestQuestions.Where(x => !x.Question.IsDeleted)
+				.OrderByDescending(x => x.CreatedDate)
+				.Include(x => x.Question).ThenInclude(x => x.User).ThenInclude(x => x.UserFollowerMaps)
+				.Include(x => x.Question).ThenInclude(x => x.CommentQuestions)
+				.Include(x => x.Question).ThenInclude(x => x.QuestionTagMaps).ThenInclude(x => x.Tag);
+			return new PaginationModel<QuestionListModel>(req, newestQuestions.Select(x => new QuestionListModel(x.Question)));
+		}
+
+		public PaginationModel<QuestionListModel> GetFeaturedQuestionByToken(PaginationRequest req)
+		{
+			string userId = _userResolverService.GetUser();
+			var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+			if (user != null && !string.IsNullOrEmpty(user.RecentlyViewedTags))
+			{
+				var recentViewdTags = user.RecentlyViewedTags.Split("|+|").Select(x => x.ToLower()).ToList();
+				var newestQuestions = _dbContext.NewestQuestions
+					.Include(x => x.Question).ThenInclude(x => x.User).ThenInclude(x => x.UserFollowerMaps)
+					.Include(x => x.Question).ThenInclude(x => x.CommentQuestions)
+					.Include(x => x.Question).ThenInclude(x => x.QuestionTagMaps).ThenInclude(x => x.Tag)
+					.Where(x => !x.Question.IsDeleted).ToList();
+
+				var featuredQuestions = newestQuestions.Where(x => recentViewdTags.Any(tag => x.Question.QuestionTagMaps.Any(tm => tm.Tag.Name.ToLower() == tag)))
+														.ToList();
+
+				if (featuredQuestions.Count < 20)
+				{
+					featuredQuestions.AddRange(newestQuestions);
+					featuredQuestions = featuredQuestions.DistinctBy(x => x.Id).ToList();
+				}
+
+				return new PaginationModel<QuestionListModel>(req, featuredQuestions.OrderByDescending(x => x.CreatedDate).Select(x => new QuestionListModel(x.Question)).ToList());
+			}
+			else
+			{
+				var newestQuestions = _dbContext.NewestQuestions
+					.Include(x => x.Question).ThenInclude(x => x.User).ThenInclude(x => x.UserFollowerMaps)
+					.Include(x => x.Question).ThenInclude(x => x.CommentQuestions)
+					.Include(x => x.Question).ThenInclude(x => x.QuestionTagMaps).ThenInclude(x => x.Tag)
+					.OrderByDescending(x => x.Question.ViewCount).ToList();
+				return new PaginationModel<QuestionListModel>(req, newestQuestions.Select(x => new QuestionListModel(x.Question)).ToList());
+			}
+		}
+
+		public PaginationModel<QuestionListModel> GetFollowUserQuestion(PaginationRequest req)
+		{
+			string userId = _userResolverService.GetUser();
+			var user = _dbContext.Users.Include(x => x.UserFollowingMaps).ThenInclude(x => x.Follower)
+									.ThenInclude(x => x.Questions).ThenInclude(x => x.CommentQuestions)
+									.Include(x => x.UserFollowingMaps).ThenInclude(x => x.Follower)
+									.ThenInclude(x => x.Questions).ThenInclude(x => x.QuestionTagMaps).ThenInclude(x => x.Tag)
+									.FirstOrDefault(x => x.Id == userId);
+			if (user != null)
+			{
+				var questions = user.UserFollowingMaps.SelectMany(x => x.Follower.Questions.Where(x => !x.IsDeleted))
+								.OrderByDescending(x => x.CreatedDate);
+				return new PaginationModel<QuestionListModel>(req, questions.Select(x => new QuestionListModel(x)));
+			}
+
+			return new PaginationModel<QuestionListModel>();
+		}
+
 		#region Helper
 
 		private void CreateNotificationNewQuestion(Question question)
@@ -480,6 +556,24 @@ namespace Golbaus_BE.Services.Implement
 			tags = tags.Select(x => x.ToLower()).ToList();
 			existedTags = _dbContext.Tags.Where(x => tags.Contains(x.Name.ToLower())).ToList();
 			return tags.Except(existedTags.Select(x => x.Name)).ToList();
+		}
+
+		private void AddNewestQuestion(Question question)
+		{
+			var questions = _dbContext.NewestQuestions.OrderByDescending(x => x.CreatedDate).ToList();
+
+			if (questions.Count >= 100)
+			{
+				_dbContext.NewestQuestions.Remove(questions.Last());
+			}
+
+			_dbContext.NewestQuestions.Add(new NewestQuestion
+			{
+				Question = question,
+				CreatedDate = question.CreatedDate
+			});
+
+			_dbContext.SaveChanges();
 		}
 
 		#endregion

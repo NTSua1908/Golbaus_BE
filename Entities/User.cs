@@ -1,6 +1,7 @@
 ﻿using Golbaus_BE.Commons.Constants;
 using Golbaus_BE.Entities.BaseEntity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Golbaus_BE.Entities
 {
@@ -14,7 +15,8 @@ namespace Golbaus_BE.Entities
         public string Avatar { get; set; }
         public string Bio { get; set; }
 		public bool IsDeleted { get; set; }
-		public virtual ICollection<UserRoleMap> UserRoleMaps { get; set; }
+		public string RecentlyViewedTags { get; set; } = "";
+        public virtual ICollection<UserRoleMap> UserRoleMaps { get; set; }
 		public virtual ICollection<Post> Posts { get; set; }
 		public virtual ICollection<Question> Questions{ get; set; }
 		public virtual ICollection<CommentPost> CommentPosts { get; set; }

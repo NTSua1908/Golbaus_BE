@@ -145,18 +145,43 @@ namespace Golbaus_BE.DTOs.Posts
 		public int ViewCount { get; set; }
 		public DateTime? PublishDate { get; set; }
 		public string AuthorName { get; set; }
+        public string AuthorAvatar { get; set; }
 
-		public PostListModel(Post post)
+        public PostListModel(Post post)
 		{
 			Id = post.Id;
 			Title = post.Title;
 			Excerpt = post.Excerpt;
 			Thumbnail = post.Thumbnail;
 			AuthorName = post.User.UserName;
+			AuthorAvatar = post.User.Avatar;
 			CommentCount = post.CommentPosts.Count(x => !x.IsDeleted);
 			ViewCount = post.ViewCount;
 			UpVote = post.UpVote;
 			DownVote = post.DownVote;
+			PublishDate = post.PublishDate;
+		}
+	}
+
+	public class PostBlockModel
+	{
+		public Guid Id { get; set; }
+		public string Title { get; set; }
+		public string Excerpt { get; set; }
+		public string Thumbnail { get; set; }
+		public string Author { get; set; }
+        public DateTime Date { get; set; }
+
+		public PostBlockModel() { }
+
+		public PostBlockModel(Guid id, string title, string excerpt, string thumbnail, string author, DateTime date)
+		{
+			Id = id;
+			Title = title;
+			Excerpt = excerpt;
+			Thumbnail = thumbnail;
+			Author = author;
+			Date = date;
 		}
 	}
 }

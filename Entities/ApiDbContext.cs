@@ -44,5 +44,8 @@ namespace Golbaus_BE.Entities
 		public DbSet<PostBookmark> PostBookmarks { get; set; }
 		public DbSet<QuestionBookmark> QuestionBookmarks { get; set; }
 		public DbSet<Notification> Notifications { get; set; }
+		public DbSet<NewestPost> NewestPosts{ get; set; }
+		public DbSet<TrendingPost> TrendingPosts { get; set; }
+		public DbSet<NewestQuestion> NewestQuestions { get; set; }
 	}
 }

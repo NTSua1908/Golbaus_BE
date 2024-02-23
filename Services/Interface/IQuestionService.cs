@@ -20,5 +20,9 @@ namespace Golbaus_BE.Services.Interface
 		PaginationModel<QuestionListModel> GetAllByUser(string userId, PaginationPostQuestionRequest req);
 		void ToggleAddBookmark(Guid id, ErrorModel errors);
 		PaginationModel<QuestionListModel> GetAllBookmarkByToken(PaginationPostQuestionRequest req);
+		PaginationModel<QuestionListModel> GetFeaturedQuestionByToken(PaginationRequest req);
+		PaginationModel<QuestionListModel> GetFollowUserQuestion(PaginationRequest req);
+		PaginationModel<QuestionListModel> GetNewestQuestions(PaginationRequest req);
+		PaginationModel<QuestionListModel> GetRelatedQuestions(Guid questionId, List<string> tags, PaginationRequest req);
 	}
 }

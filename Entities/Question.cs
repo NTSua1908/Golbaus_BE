@@ -21,6 +21,7 @@ namespace Golbaus_BE.Entities
 		public string UpdatedBy{ get; set; }
 		public string UserId { get; set; }
 		public virtual User User{ get; set; }
+		public virtual NewestQuestion NewestQuestion { get; set; }
 		public virtual ICollection<CommentQuestion> CommentQuestions { get; set; }
 		public virtual ICollection<QuestionTagMap> QuestionTagMaps { get; set; }
 		public virtual ICollection<QuestionUserVoteMap> QuestionUserVoteMaps { get; set; }

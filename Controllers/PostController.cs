@@ -177,5 +177,56 @@ namespace Golbaus_BE.Controllers
 			var posts = _postService.GetAllBookmarkByToken(req);
 			return Ok(posts);
 		}
+
+		[HttpGet("GetOtherPostByUser/{userId}/{postId}")]
+		[AllowAnonymous]
+		public IActionResult GetOtherPostByUser(string userId, Guid postId, PaginationRequest req)
+		{
+			req.Format();
+			var posts = _postService.GetOtherPostByUser(userId, postId, req);
+			return Ok(posts);
+		}
+
+		[HttpGet("GetRelatedPost/{postId}")]
+		[AllowAnonymous]
+		public IActionResult GetRelatedPost(Guid postId, List<string> tags, PaginationRequest req)
+		{
+			req.Format();
+			var posts = _postService.GetRelatedPosts(postId, tags, req);
+			return Ok(posts);
+		}
+
+		[HttpGet("GetNewestPost")]
+		[AllowAnonymous]
+		public IActionResult GetNewestPost()
+		{
+			var posts = _postService.GetNewestPosts();
+			return Ok(posts);
+		}
+
+		[HttpGet("GetPostTrending")]
+		[AllowAnonymous]
+		public IActionResult GetPostTrending(PaginationRequest req)
+		{
+			req.Format();
+			var posts = _postService.GetPostTrending(req);
+			return Ok(posts);
+		}
+
+		[HttpGet("GetFeaturedPostByToken")]
+		[AllowAnonymous]
+		public IActionResult GetFeaturedPostByToken()
+		{
+			var posts = _postService.GetFeaturedPostByToken();
+			return Ok(posts);
+		}
+
+		[HttpGet("GetFollowUserPost")]
+		public IActionResult GetFollowUserPost(PaginationRequest req)
+		{
+			req.Format();
+			var posts = _postService.GetFollowUserPost(req);
+			return Ok(posts);
+		}
 	}
 }

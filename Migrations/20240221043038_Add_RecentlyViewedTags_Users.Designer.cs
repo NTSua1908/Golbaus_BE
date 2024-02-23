@@ -3,6 +3,7 @@ using System;
 using Golbaus_BE.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Golbaus_BE.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    partial class ApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240221043038_Add_RecentlyViewedTags_Users")]
+    partial class Add_RecentlyViewedTags_Users
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -175,26 +178,6 @@ namespace Golbaus_BE.Migrations
                         .IsUnique();
 
                     b.ToTable("NewestPosts");
-                });
-
-            modelBuilder.Entity("Golbaus_BE.Entities.NewestQuestion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("QuestionId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestionId")
-                        .IsUnique();
-
-                    b.ToTable("NewestQuestions");
                 });
 
             modelBuilder.Entity("Golbaus_BE.Entities.Notification", b =>
@@ -636,7 +619,7 @@ namespace Golbaus_BE.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@GMAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEPSaStPLfCRAT/mn34uNEIcC1C8KcBmtzSQZVkrBb2eSPp6ODc2TmJWpLr13AYCHlA==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEIhqc4o9FjHD3tIyxbEKQB+S0pPHDJl/1G2SNp2YDNYBMuXm9GUgSWGyzQFkJIkoYQ==",
                             PhoneNumberConfirmed = false,
                             RecentlyViewedTags = "",
                             SecurityStamp = "",
@@ -657,7 +640,7 @@ namespace Golbaus_BE.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "SUPERADMIN@GMAIL.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEEOXOksVV6Tehg9lXoAK5+sUxPYRamIK2EHbY2tOsjqeKBmvXuvKUvO1mi00eTA9FQ==",
+                            PasswordHash = "AQAAAAEAACcQAAAAENXC85okEcNzYgbkQM/SHwSzbZaFMg0PQAcoITrZmOA0QffVvMJg25Dj2X8cez2tGw==",
                             PhoneNumberConfirmed = false,
                             RecentlyViewedTags = "",
                             SecurityStamp = "",
@@ -894,17 +877,6 @@ namespace Golbaus_BE.Migrations
                         .IsRequired();
 
                     b.Navigation("Post");
-                });
-
-            modelBuilder.Entity("Golbaus_BE.Entities.NewestQuestion", b =>
-                {
-                    b.HasOne("Golbaus_BE.Entities.Question", "Question")
-                        .WithOne("NewestQuestion")
-                        .HasForeignKey("Golbaus_BE.Entities.NewestQuestion", "QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Question");
                 });
 
             modelBuilder.Entity("Golbaus_BE.Entities.Notification", b =>
@@ -1179,8 +1151,6 @@ namespace Golbaus_BE.Migrations
             modelBuilder.Entity("Golbaus_BE.Entities.Question", b =>
                 {
                     b.Navigation("CommentQuestions");
-
-                    b.Navigation("NewestQuestion");
 
                     b.Navigation("QuestionBookmarks");
 

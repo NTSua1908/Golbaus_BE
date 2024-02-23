@@ -7,7 +7,6 @@ using Golbaus_BE.Entities;
 using Golbaus_BE.Services.Interface;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using Role = Golbaus_BE.Commons.Constants.Role;
 
 namespace Golbaus_BE.Services.Implement
 {
@@ -42,6 +41,7 @@ namespace Golbaus_BE.Services.Implement
 				else if (model.PublishType == PublishType.Public)
 				{
 					CreateNotificationNewPost(post);
+					AddNewestPost(post);
 				}
 
 				return post.Id;
@@ -79,7 +79,26 @@ namespace Golbaus_BE.Services.Implement
 			{
 				_httpContextAccessor.HttpContext.Session.SetString("Time", DateTimeHelper.GetVietnameTime().ToString("yyyy-MM-dd HH:mm:ss"));
 				_httpContextAccessor.HttpContext.Session.SetString("PostId", id.ToString());
-				Console.WriteLine(_httpContextAccessor.HttpContext.Session.Id);
+
+				var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+				if (user != null)
+				{
+					var recentlyViewedTags = user.RecentlyViewedTags?.Split("|+|").ToList() ?? new List<string>();
+
+					//store tag recent viewed can >= 100
+					if (recentlyViewedTags.Count >= 100)
+					{
+						recentlyViewedTags.RemoveRange(0, post.PostTagMaps.Count);
+						recentlyViewedTags.AddRange(post.PostTagMaps.Select(x => x.Tag.Name));
+					}
+					else
+					{
+						recentlyViewedTags.AddRange(post.PostTagMaps.Select(x => x.Tag.Name));
+					}
+					user.RecentlyViewedTags = string.Join("|+|", recentlyViewedTags);
+					_dbContext.SaveChanges();
+				}
+
 				return new PostDetailModel(post, userId);
 			}
 			return new PostDetailModel();
@@ -180,6 +199,7 @@ namespace Golbaus_BE.Services.Implement
 				post.PublishType = PublishType.Public;
 
 				CreateNotificationNewPost(post);
+				AddNewestPost(post);
 
 				_dbContext.SaveChanges();
 			}
@@ -192,7 +212,7 @@ namespace Golbaus_BE.Services.Implement
 			{
 				errors.Add(string.Format(ErrorResource.NotFound, "Post"));
 			}
-			else
+			else if (post.PublishType == PublishType.Public)
 			{
 				string timeGet = _httpContextAccessor.HttpContext.Session.GetString("Time");
 				string postId = _httpContextAccessor.HttpContext.Session.GetString("PostId");
@@ -202,6 +222,8 @@ namespace Golbaus_BE.Services.Implement
 					id == PostId && (DateTimeHelper.GetVietnameTime() - TimeGet).TotalSeconds > 10)
 				{
 					post.ViewCount++;
+					AddViewTrending(post);
+
 					_dbContext.SaveChanges();
 					_httpContextAccessor.HttpContext.Session.Remove("Time");
 					_httpContextAccessor.HttpContext.Session.Remove("PostId");
@@ -320,6 +342,131 @@ namespace Golbaus_BE.Services.Implement
 			return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
 		}
 
+		public PaginationModel<PostListModel> GetOtherPostByUser(string userId, Guid postId, PaginationRequest req)
+		{
+			var posts = _dbContext.Posts.Include(x => x.CommentPosts).Include(x => x.User)
+										.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
+										.Where(x => x.UserId == userId && !x.IsDeleted && x.PublishType == PublishType.Public && x.Id != postId)
+										.OrderByDescending(x => x.ViewCount);
+			return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
+		}
+
+		public PaginationModel<PostListModel> GetRelatedPosts(Guid postId, List<string> tags, PaginationRequest req)
+		{
+			tags = tags.Select(x => x.ToLower()).ToList();
+			var posts = _dbContext.Posts.Include(x => x.CommentPosts).Include(x => x.User)
+										.Include(x => x.PostTagMaps).ThenInclude(x => x.Tag)
+										.Where(x => !x.IsDeleted && x.PublishType == PublishType.Public && x.Id != postId && x.PostTagMaps.Any(x => tags.Contains(x.Tag.Name.ToLower())))
+										.OrderByDescending(x => x.ViewCount);
+			return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
+		}
+
+		public List<PostListModel> GetNewestPosts()
+		{
+			return _dbContext.NewestPosts.Where(x => !x.Post.IsDeleted)
+				.OrderByDescending(x => x.PublishDate)
+				.Include(x => x.Post).ThenInclude(x => x.User)
+				.Include(x => x.Post).ThenInclude(x => x.CommentPosts)
+				.Take(15).Select(x => new PostListModel(x.Post)).ToList();
+		}
+
+		public PaginationModel<PostBlockModel> GetPostTrending(PaginationRequest req)
+		{
+			var trendings = _dbContext.TrendingPosts.Include(x => x.Post).ThenInclude(x => x.User)
+				.Where(x => !x.Post.IsDeleted)
+				.GroupBy(x => x.PostId)
+				.Select(x => new {
+					Id = x.Key,
+					x.First().Post.Title,
+					Author = x.First().Post.User.UserName,
+					Date = x.First().Post.PublishDate,
+					ViewCount = x.Sum(x => x.ViewCount),
+					x.First().Post.Thumbnail,
+					x.First().Post.Excerpt
+				})
+				.OrderByDescending(x => x.ViewCount).ThenByDescending(x => x.Date)
+				.Select(x => new PostBlockModel
+				{
+					Id = x.Id,
+					Title = x.Title,
+					Date = x.Date.Value,
+					Author = x.Author,
+					Thumbnail = x.Thumbnail,
+					Excerpt = x.Excerpt
+				}).ToList();
+
+			return new PaginationModel<PostBlockModel>(req, trendings);
+		}
+
+		public List<List<PostBlockModel>> GetFeaturedPostByToken()
+		{
+			string userId = _userResolverService.GetUser();
+			var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
+			if (user != null && !string.IsNullOrEmpty(user.RecentlyViewedTags))
+			{
+				var recentViewdTags = user.RecentlyViewedTags.Split("|+|").Select(x => x.ToLower()).ToList();
+				var newestPosts = _dbContext.NewestPosts.Where(x => !x.Post.IsDeleted)
+				.Select(x => new
+				{
+					Id = x.PostId,
+					Title = x.Post.Title,
+					Excerpt = x.Post.Excerpt,
+					Thumbnail = x.Post.Thumbnail,
+					Author = x.Post.User.UserName,
+					Date = x.Post.PublishDate,
+					Tags = x.Post.PostTagMaps.Select(x => x.Tag.Name.ToLower())
+				}).ToList();
+				var featuredPosts = newestPosts.Where(x => recentViewdTags.Any(tag => x.Tags.Contains(tag)))
+					.Select(x => new PostBlockModel(x.Id, x.Title, x.Excerpt, x.Thumbnail, x.Author, x.Date.Value)).ToList();
+
+				if (featuredPosts.Count < 20)
+				{
+					featuredPosts.AddRange(GetPostTrending(new PaginationRequest { Page = 0, Amount = (32 + 4 - (featuredPosts.Count % 4)) }).Data);
+					featuredPosts = featuredPosts.DistinctBy(x => x.Id).ToList();
+				}
+
+				return featuredPosts.OrderByDescending(x => x.Date).Select((post, index) => new { post, index })
+					.GroupBy(x => x.index / 4)
+					.Select(group => group.Select(x => x.post).ToList())
+					.ToList();
+			}
+			else
+			{
+				var newestPosts = _dbContext.NewestPosts.OrderByDescending(x => x.Post.ViewCount).Select(x => new
+				{
+					Id = x.PostId,
+					Title = x.Post.Title,
+					Excerpt = x.Post.Excerpt,
+					Thumbnail = x.Post.Thumbnail,
+					Author = x.Post.User.UserName,
+					Date = x.Post.PublishDate,
+					Tags = x.Post.PostTagMaps.Select(x => x.Tag.Name)
+				}).ToList();
+				return newestPosts
+					.Select(x => new PostBlockModel(x.Id, x.Title, x.Excerpt, x.Thumbnail, x.Author, x.Date.Value))
+					.Select((post, index) => new { post, index })
+					.GroupBy(x => x.index / 4)
+					.Select(group => group.Select(x => x.post).ToList())
+					.ToList();
+			}
+		}
+
+		public PaginationModel<PostListModel> GetFollowUserPost(PaginationRequest req)
+		{
+			string userId = _userResolverService.GetUser();
+			var user = _dbContext.Users.Include(x => x.UserFollowingMaps).ThenInclude(x => x.Follower)
+									.ThenInclude(x => x.Posts).ThenInclude(x => x.CommentPosts)
+									.FirstOrDefault(x => x.Id == userId);
+			if (user != null)
+			{
+				var posts = user.UserFollowingMaps.SelectMany(x => x.Follower.Posts.Where(x => x.PublishType == PublishType.Public && !x.IsDeleted))
+								.OrderByDescending(x => x.PublishDate);
+				return new PaginationModel<PostListModel>(req, posts.Select(x => new PostListModel(x)));
+			}
+
+			return new PaginationModel<PostListModel>();
+		}
+
 		#region Helper
 
 		private void CreateNotificationNewPost(Post post)
@@ -341,6 +488,44 @@ namespace Golbaus_BE.Services.Implement
 			}
 			_dbContext.Notifications.AddRange(notifications);
 			_dbContext.SaveChanges();
+		}
+
+		private void AddNewestPost(Post post)
+		{
+			var posts = _dbContext.NewestPosts.OrderByDescending(x => x.PublishDate).ToList();
+			
+			if (posts.Count >= 100)
+			{ 	
+				_dbContext.NewestPosts.Remove(posts.Last());
+			}
+
+			_dbContext.NewestPosts.Add(new NewestPost
+			{
+				Post = post,
+				PublishDate = post.PublishDate.Value
+			});
+
+			_dbContext.SaveChanges();
+		}
+
+		private void AddViewTrending(Post post)
+		{
+			var now = DateTimeHelper.GetVietnameTime();
+			var trendingPost = _dbContext.TrendingPosts.FirstOrDefault(x => x.Date == now.Date && x.PostId == post.Id);
+
+			if (trendingPost != null)
+			{
+				trendingPost.ViewCount += 1;
+			}
+			else
+			{
+				_dbContext.TrendingPosts.Add(new TrendingPost 
+				{
+					Date = now.Date,
+					Post = post,
+					ViewCount = 1
+				});
+			}
 		}
 
 		private void Filter(PaginationPostQuestionRequest req, ref IQueryable<Post> data)

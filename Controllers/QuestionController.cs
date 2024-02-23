@@ -141,8 +141,8 @@ namespace Golbaus_BE.Controllers
 		public IActionResult GetAllByToken(PaginationPostQuestionRequest req)
 		{
 			req.Format();
-			var posts = _questionService.GetAllByToken(req);
-			return Ok(posts);
+			var questions = _questionService.GetAllByToken(req);
+			return Ok(questions);
 		}
 
 		[HttpGet("GetAll")]
@@ -150,8 +150,8 @@ namespace Golbaus_BE.Controllers
 		public IActionResult GetAll(PaginationPostQuestionRequest req)
 		{
 			req.Format();
-			var posts = _questionService.GetAll(req);
-			return Ok(posts);
+			var questions = _questionService.GetAll(req);
+			return Ok(questions);
 		}
 
 		[HttpGet("GetAllByUser/{userId}")]
@@ -159,8 +159,8 @@ namespace Golbaus_BE.Controllers
 		public IActionResult GetAllByUser(string userId, PaginationPostQuestionRequest req)
 		{
 			req.Format();
-			var posts = _questionService.GetAllByUser(userId, req);
-			return Ok(posts);
+			var questions = _questionService.GetAllByUser(userId, req);
+			return Ok(questions);
 		}
 
 		[HttpPut("ToggleAddBookmark/{questionId}")]
@@ -175,8 +175,43 @@ namespace Golbaus_BE.Controllers
 		public IActionResult GetAllBookmarkByToken(PaginationPostQuestionRequest req)
 		{
 			req.Format();
-			var posts = _questionService.GetAllBookmarkByToken(req);
-			return Ok(posts);
+			var questions = _questionService.GetAllBookmarkByToken(req);
+			return Ok(questions);
+		}
+
+		[HttpGet("GetRelatedQuestion/{questionId}")]
+		[AllowAnonymous]
+		public IActionResult GetRelatedQuestions(Guid questionId, List<string> tags, PaginationRequest req)
+		{
+			req.Format();
+			var questions = _questionService.GetRelatedQuestions(questionId, tags, req);
+			return Ok(questions);
+		}
+
+		[HttpGet("GetNewestQuestion")]
+		[AllowAnonymous]
+		public IActionResult GetNewestQuestions(PaginationRequest req)
+		{
+			req.Format();
+			var questions = _questionService.GetNewestQuestions(req);
+			return Ok(questions);
+		}
+
+		[HttpGet("GetFeaturedQuestionByToken")]
+		[AllowAnonymous]
+		public IActionResult GetFeaturedQuestionByToken(PaginationRequest req)
+		{
+			req.Format();
+			var questions = _questionService.GetFeaturedQuestionByToken(req);
+			return Ok(questions);
+		}
+
+		[HttpGet("GetFollowUserQuestion")]
+		public IActionResult GetFollowUserQuestion(PaginationRequest req)
+		{
+			req.Format();
+			var questions = _questionService.GetFollowUserQuestion(req);
+			return Ok(questions);
 		}
 	}
 }

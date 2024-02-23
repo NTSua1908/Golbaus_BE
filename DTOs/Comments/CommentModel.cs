@@ -114,7 +114,7 @@ namespace Golbaus_BE.DTOs.Comments
 		public CommentDetailModel(CommentQuestion comment, string userId, bool isChild)
 		{
 			Id = comment.Id;
-			userId = comment.UserId;
+			UserId = comment.UserId;
 			Avatar = comment.User.Avatar;
 			FullName = comment.User.FullName;
 			UserName = comment.User.UserName;

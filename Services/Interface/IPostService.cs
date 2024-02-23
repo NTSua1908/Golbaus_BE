@@ -1,6 +1,7 @@
 ﻿using Golbaus_BE.Commons.Constants;
 using Golbaus_BE.DTOs;
 using Golbaus_BE.DTOs.Posts;
+using Golbaus_BE.DTOs.Questions;
 
 namespace Golbaus_BE.Services.Interface
 {
@@ -21,5 +22,11 @@ namespace Golbaus_BE.Services.Interface
 		PaginationModel<PostListModel> GetAllByUser(string userId, PaginationPostQuestionRequest req);
 		void ToggleAddBookmark(Guid id, ErrorModel errors);
 		PaginationModel<PostListModel> GetAllBookmarkByToken(PaginationPostQuestionRequest req);
+		PaginationModel<PostListModel> GetOtherPostByUser(string userId, Guid postId, PaginationRequest req);
+		PaginationModel<PostListModel> GetRelatedPosts(Guid postId, List<string> tags, PaginationRequest req);
+		List<PostListModel> GetNewestPosts();
+		List<List<PostBlockModel>> GetFeaturedPostByToken();
+		PaginationModel<PostBlockModel> GetPostTrending(PaginationRequest req);
+		PaginationModel<PostListModel> GetFollowUserPost(PaginationRequest req);
 	}
 }

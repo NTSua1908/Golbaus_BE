@@ -53,45 +53,32 @@ if (!app.Environment.IsDevelopment())
 	}
 }
 
-//if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
-//{
-//	app.UseSwagger();
-//	app.UseSwaggerUI();
-//}
-
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
 
-//var options = new DashboardOptions
-//{
-//	Authorization = new[]{
-//		new HangfireAuthorizationFilter()
-//	}
-//};
-
-//app.UseEndpoints(endpoints =>
-//	endpoints.MapHangfireDashboard("/hangfire", new DashboardOptions
-//	{
-//		IgnoreAntiforgeryToken = true
-//	})
-//);
-
-app.UseSession();
-
-//app.UseStringTrimmingMiddleware();
-
-app.UseHangfireDashboard("/hangfire");
-
 app.UseCors("CorsPolicy");
 
 app.UseHttpsRedirection();
 
+var options = new DashboardOptions
+{
+	Authorization = new[]{
+		new HangfireAuthorizationFilter()
+	}
+};
+
+app.UseHangfireDashboard("/hangfire", options);
+
 app.UseAuthorization();
 
+app.UseCors();
+
 app.MapControllers();
+
+app.UseSession();
 
 app.Run();

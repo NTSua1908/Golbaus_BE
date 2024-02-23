@@ -206,6 +206,30 @@ namespace Golbaus_BE.Extentions
 						.HasForeignKey(x => x.NotifierId)
 						.IsRequired();
 			});
+
+			builder.Entity<NewestPost>(newest =>
+			{
+				newest.HasOne(x => x.Post)
+					.WithOne(x => x.NewestPost)
+					.HasForeignKey<NewestPost>(x => x.PostId)
+					.IsRequired();
+			});
+
+			builder.Entity<TrendingPost>(trending =>
+			{
+				trending.HasOne(x => x.Post)
+					.WithMany(x => x.TrendingPosts)
+					.HasForeignKey(x => x.PostId)
+					.IsRequired();
+			});
+
+			builder.Entity<NewestQuestion>(newest =>
+			{
+				newest.HasOne(x => x.Question)
+					.WithOne(x => x.NewestQuestion)
+					.HasForeignKey<NewestQuestion>(x => x.QuestionId)
+					.IsRequired();
+			});
 		}
 	}
 }
