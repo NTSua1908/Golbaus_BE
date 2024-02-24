@@ -67,3 +67,11 @@ To run this project locally, follow these steps:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 ## Contact
 If you have any questions or suggestions, feel free to contact us at [suaapag@gmail.com](mailto:suaapag@gmail.com).
+## Diagrams
+
+### ER Diagram
+![ERD_Golbaus drawio](https://github.com/NTSua1908/Golbaus_BE/assets/72732661/2694dfd9-4293-406f-903d-66d33cb40af5)
+
+### User Case Diagram
+![Golbaus_Usercase drawio](https://github.com/NTSua1908/Golbaus_BE/assets/72732661/0e46f224-76d5-4a1b-bd0c-1b3ecc3fde47)
+
