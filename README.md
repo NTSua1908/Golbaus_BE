@@ -3,6 +3,8 @@ Welcome to Golbaus! This project aims to provide a platform where users can shar
 
 Link website [ntsua.id.vn](http://ntsua.id.vn)
 
+Demo account: thiensuaecr@gmail.com / DemoUser@123456 
+
 ## Features
 - **User Authentication:** Users can create accounts, log in, and log out securely.
 - **Article Posting:** Users can create and publish articles on various topics.
