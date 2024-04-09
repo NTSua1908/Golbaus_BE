@@ -12,6 +12,7 @@ using System.Text.Json;
 using Golbaus_BE.DTOs;
 using Golbaus_BE.Services.Interface;
 using Golbaus_BE.Services.Implement;
+using Microsoft.Extensions.Configuration;
 
 namespace Golbaus_BE.Extentions
 {
@@ -19,10 +20,12 @@ namespace Golbaus_BE.Extentions
 	{
 		public static IServiceCollection AddCustomDbContext(this IServiceCollection services, WebApplicationBuilder builder)
 		{
-			services.AddEntityFrameworkMySql().AddDbContext<ApiDbContext>(options =>
+			var connectionString = GetConnectionString(builder);
+
+            services.AddEntityFrameworkMySql().AddDbContext<ApiDbContext>(options =>
 				options.UseMySql(
-					builder.Configuration.GetConnectionString("ApiDbConnection"),
-					ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("ApiDbConnection"))
+                    connectionString,
+					ServerVersion.AutoDetect(connectionString)
 			));
 
 			builder.Configuration.Bind("MailSettings", new MailSettings());
@@ -114,13 +117,15 @@ namespace Golbaus_BE.Extentions
 
 		public static IServiceCollection AddHangfire(this IServiceCollection services, WebApplicationBuilder builder)
 		{
-			services.AddHangfire(x => x
+            var connectionString = GetConnectionString(builder);
+
+            services.AddHangfire(x => x
 			.SetDataCompatibilityLevel(CompatibilityLevel.Version_110)
 			.UseSimpleAssemblyNameTypeSerializer()
 			.UseRecommendedSerializerSettings()
 			.UseStorage(
 				new MySqlStorage(
-					builder.Configuration.GetConnectionString("ApiDbConnection"),
+					connectionString,
 					new MySqlStorageOptions
 					{
 						QueuePollInterval = TimeSpan.FromSeconds(1),
@@ -216,5 +221,24 @@ namespace Golbaus_BE.Extentions
 			});
 			return services;
 		}
+
+		private static string GetConnectionString(WebApplicationBuilder builder)
+		{
+            var host = builder.Configuration["DBHOST"];
+            var port = builder.Configuration["DBPORT"];
+            var password = builder.Configuration["MYSQL_PASSWORD"];
+            var userid = builder.Configuration["MYSQL_USER"];
+            var usersDataBase = builder.Configuration["MYSQL_DATABASE"];
+
+            var connectionString = builder.Configuration.GetConnectionString("ApiDbConnection");
+
+            if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(port) && !string.IsNullOrEmpty(password) &&
+                !string.IsNullOrEmpty(userid) && !string.IsNullOrEmpty(usersDataBase))
+            {
+                connectionString = $"Server={host};Port={port};Database={usersDataBase}; Pooling=true;User ID={userid};Password={password};Allow User Variables=true";
+            }
+
+			return connectionString;
+        }
 	}
 }
